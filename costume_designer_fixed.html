@@ -1,0 +1,2062 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>衣橱志 · 小说服装设计工具</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@300;400;500&family=DM+Mono:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0c0a; --bg2: #161412; --bg3: #1e1b18; --bg4: #252119;
+  --border: #2e2a24; --border2: #3d3830;
+  --text: #e8e0d4; --text2: #a09080; --text3: #6a5e52;
+  --accent: #c8a96e; --accent2: #8b6a3e; --accent-dim: #c8a96e22;
+  --red: #c06060; --green: #7aaa7a; --blue: #6a9ab8; --purple: #9a7ab8;
+  --serif: 'Noto Serif SC', serif; --sans: 'Noto Sans SC', sans-serif; --mono: 'DM Mono', monospace;
+  --r: 6px; --rl: 10px; --shadow: 0 2px 20px #00000040;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.7; min-height: 100vh; overflow-x: hidden; }
+
+/* HEADER */
+header { border-bottom: 1px solid var(--border); padding: 0 1.5rem; display: flex; align-items: center; gap: 1rem; height: 52px; position: sticky; top: 0; z-index: 100; background: var(--bg); }
+.logo { font-family: var(--serif); font-size: 17px; color: var(--accent); letter-spacing: .05em; white-space: nowrap; }
+.logo span { color: var(--text3); font-size: 12px; margin-left: 6px; }
+.header-nav { display: flex; gap: 4px; margin-left: auto; }
+.hn-btn { padding: 5px 12px; border: 1px solid transparent; border-radius: 20px; font-size: 12px; cursor: pointer; background: none; color: var(--text2); font-family: var(--sans); transition: all .15s; }
+.hn-btn:hover { color: var(--text); border-color: var(--border2); }
+.hn-btn.active { color: var(--accent); border-color: var(--accent2); background: var(--accent-dim); }
+
+/* LAYOUT */
+.layout { display: grid; grid-template-columns: 268px 1fr 356px; height: calc(100vh - 52px); }
+.sidebar { border-right: 1px solid var(--border); overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: .875rem; }
+.sidebar::-webkit-scrollbar, .main::-webkit-scrollbar, .rpanel::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb, .main::-webkit-scrollbar-thumb, .rpanel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+.panel-title { font-size: 10px; font-weight: 500; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+.api-block, .char-block { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--rl); padding: 12px; }
+.api-row { margin-bottom: 8px; } .api-row:last-child { margin-bottom: 0; }
+label.api-label { display: block; font-size: 10px; color: var(--text3); margin-bottom: 3px; }
+select.api-sel, input.api-inp { width: 100%; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--r); color: var(--text); font-family: var(--sans); font-size: 12px; padding: 5px 9px; outline: none; transition: border-color .15s; }
+select.api-sel:focus, input.api-inp:focus { border-color: var(--accent2); }
+input.api-inp[type="password"] { font-family: var(--mono); letter-spacing: .1em; }
+.api-hint { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.api-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3); margin-top: 5px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+.status-dot.ok { background: var(--green); }
+.status-dot.err { background: var(--red); }
+.status-dot.connecting { background: var(--accent); animation: pulse .8s ease-in-out infinite alternate; }
+@keyframes pulse { from { opacity:.4; } to { opacity:1; } }
+.api-btn-row { display: flex; gap: 5px; margin-top: 8px; }
+.api-btn { flex: 1; padding: 5px 8px; border-radius: var(--r); font-size: 11px; font-family: var(--sans); cursor: pointer; transition: all .15s; border: 1px solid var(--border2); background: var(--bg); color: var(--text2); }
+.api-btn:hover { border-color: var(--accent2); color: var(--accent); }
+.api-btn:disabled { opacity: .35; cursor: not-allowed; }
+.api-btn.primary { background: var(--accent2); border-color: var(--accent); color: var(--accent); }
+.api-btn.primary:hover { background: var(--accent); color: var(--bg); }
+.api-btn.primary:disabled { background: var(--bg); color: var(--text3); }
+.api-model-row { display: none; }
+.api-model-row.visible { display: block; }
+.char-block textarea { width: 100%; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--r); color: var(--text); font-family: var(--sans); font-size: 12px; padding: 7px 9px; resize: vertical; min-height: 90px; outline: none; line-height: 1.6; }
+.char-block textarea:focus { border-color: var(--accent2); }
+.char-block textarea::placeholder { color: var(--text3); }
+.char-new-btn { font-size: 10px; padding: 2px 8px; border: 1px dashed var(--border2); border-radius: 20px; background: none; color: var(--text3); cursor: pointer; font-family: var(--sans); transition: all .15s; }
+.char-new-btn:hover { border-color: var(--accent); color: var(--accent); }
+.char-icon-btn { width: 22px; height: 22px; border: 1px solid var(--border2); border-radius: 5px; background: none; color: var(--text3); cursor: pointer; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s; }
+.char-icon-btn:hover { border-color: var(--accent2); color: var(--accent); }
+.char-del-btn:hover { border-color: var(--red); color: var(--red); }
+.char-chip { display: flex; align-items: center; gap: 5px; padding: 5px 9px; border: 1px solid var(--border); border-radius: var(--r); cursor: pointer; font-size: 12px; color: var(--text2); background: var(--bg); transition: all .15s; user-select: none; }
+.char-chip:hover { border-color: var(--accent2); color: var(--text); }
+.char-chip.active { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+.char-chip-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+
+/* MAIN */
+.main { overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; gap: .875rem; }
+.kw-bar { display: flex; gap: 8px; align-items: center; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--rl); padding: 9px 12px; }
+.kw-bar input { flex: 1; background: none; border: none; color: var(--text); font-family: var(--sans); font-size: 13px; outline: none; }
+.kw-bar input::placeholder { color: var(--text3); }
+.gen-btn { padding: 6px 16px; background: var(--accent2); border: 1px solid var(--accent); border-radius: var(--r); color: var(--accent); font-family: var(--serif); font-size: 13px; cursor: pointer; white-space: nowrap; transition: all .15s; }
+.gen-btn:hover { background: var(--accent); color: var(--bg); }
+.gen-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* FORM CARDS */
+.form-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--rl); overflow: hidden; }
+.form-card-head { padding: 9px 14px; display: flex; align-items: center; gap: 7px; background: var(--bg3); border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+.form-card-head:hover { background: var(--bg4); }
+.fch-icon { font-size: 14px; color: var(--text3); }
+.fch-title { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; }
+.fch-badge { font-size: 10px; padding: 1px 7px; border-radius: 20px; border: 1px solid; }
+.b-req { border-color: var(--accent2); color: var(--accent); background: var(--accent-dim); }
+.b-opt { border-color: var(--border2); color: var(--text3); }
+.b-acc { border-color: #7aaa7a44; color: var(--green); background: #7aaa7a11; }
+.fch-arrow { font-size: 11px; color: var(--text3); transition: transform .2s; }
+.fch-arrow.open { transform: rotate(180deg); }
+.form-card-body { padding: 14px; display: none; }
+.form-card-body.open { display: block; }
+.fg { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 9px; }
+.fg3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 9px; }
+.fi { display: flex; flex-direction: column; gap: 3px; }
+.fi label { font-size: 10px; color: var(--text3); display: flex; align-items: center; gap: 4px; }
+.fi-star { color: var(--red); }
+.fi-ai { font-size: 9px; padding: 1px 4px; border-radius: 8px; background: #9a7ab811; border: 1px solid #9a7ab833; color: var(--purple); }
+.fi input, .fi select, .fi textarea { background: var(--bg); border: 1px solid var(--border2); border-radius: var(--r); color: var(--text); font-family: var(--sans); font-size: 12px; padding: 5px 9px; outline: none; transition: border-color .15s; width: 100%; }
+.fi input:focus, .fi select:focus, .fi textarea:focus { border-color: var(--accent2); }
+.fi input.ai-fill { border-style: dashed; }
+.fi input.ai-fill::placeholder, .fi textarea.ai-fill::placeholder { color: var(--text3); font-style: italic; }
+.fi textarea { resize: vertical; min-height: 50px; }
+.fi select option { background: var(--bg3); }
+.section-divider { font-size: 10px; color: var(--text3); letter-spacing: .05em; padding: 8px 0 5px; border-bottom: 1px solid var(--border); margin-bottom: 9px; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 4px; }
+.leg { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text3); }
+.leg-box { width: 11px; height: 11px; border-radius: 2px; }
+.leg-solid { background: var(--border2); }
+.leg-dashed { border: 1.5px dashed var(--border2); }
+
+/* LAYER TABS */
+.layer-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.layer-tab { padding: 6px 12px; border: 1px solid var(--border2); border-radius: 999px; cursor: pointer; font-size: 11px; color: var(--text2); background: var(--bg3); transition: all .15s; }
+.layer-tab:hover { border-color: var(--accent2); color: var(--accent); }
+.layer-tab.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+.layer-pane { display: none; }
+.layer-pane.active { display: block; }
+
+/* RIGHT PANEL */
+.rpanel { border-left: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
+.rp-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.rp-tab { flex: 1; padding: 10px 6px; text-align: center; font-size: 11px; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; }
+.rp-tab:hover { color: var(--text2); }
+.rp-tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+.rp-pane { display: none; padding: 14px; }
+.rp-pane.on { display: block; }
+
+/* RESULT TABLE - per garment style */
+.garment-block { margin-bottom: 1rem; }
+.garment-label { font-size: 10px; font-weight: 500; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; padding: 5px 9px; background: var(--accent-dim); border: 1px solid var(--accent2); border-radius: var(--r) var(--r) 0 0; }
+.rt { width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--r) var(--r); }
+.rt tr { border-bottom: 1px solid var(--border); }
+.rt tr:last-child { border-bottom: none; }
+.rt td { padding: 6px 9px; vertical-align: top; }
+.rt td:first-child { color: var(--text3); white-space: nowrap; width: 34%; font-size: 11px; }
+.rt td:last-child { color: var(--text); }
+.kw-val { color: var(--accent); font-weight: 500; }
+.ai-val { color: var(--text); }
+
+/* ACCESSORIES TABLE */
+.acc-table { width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.acc-table tr { border-bottom: 1px solid var(--border); }
+.acc-table tr:last-child { border-bottom: none; }
+.acc-table td { padding: 5px 9px; vertical-align: top; }
+.acc-table td:first-child { color: var(--text3); white-space: nowrap; width: 30%; font-size: 11px; }
+
+/* PROSE */
+.prose-box { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--rl); padding: 14px; font-family: var(--serif); font-size: 13.5px; line-height: 2; color: var(--text); min-height: 70px; }
+.prose-box.empty { color: var(--text3); font-style: italic; font-family: var(--sans); font-size: 12px; }
+.loading-spin { display: inline-block; width: 11px; height: 11px; border: 1.5px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; margin-right: 5px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.copy-btn { margin-top: 7px; padding: 4px 11px; background: none; border: 1px solid var(--border2); border-radius: var(--r); font-size: 11px; color: var(--text3); cursor: pointer; transition: all .15s; font-family: var(--sans); }
+.copy-btn:hover { color: var(--text); border-color: var(--border); }
+.export-btn { margin-top: 7px; padding: 5px 14px; background: var(--accent2); border: 1px solid var(--accent); border-radius: var(--r); font-size: 12px; color: var(--accent); cursor: pointer; transition: all .15s; font-family: var(--sans); font-weight: 500; display: inline-flex; align-items: center; gap: 5px; }
+.export-btn:hover { background: var(--accent); color: var(--bg); }
+.export-btn:disabled { opacity: .35; cursor: not-allowed; }
+.rs-title { font-size: 10px; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+.result-section { margin-bottom: 1.25rem; }
+
+/* SELECTOR MODAL */
+.selector-input { cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, var(--text3) 50%), linear-gradient(135deg, var(--text3) 50%, transparent 50%); background-position: calc(100% - 14px) calc(50% - 2px), calc(100% - 9px) calc(50% - 2px); background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; padding-right: 26px !important; }
+.selector-modal { position: fixed; inset: 0; background: rgba(0,0,0,.72); backdrop-filter: blur(4px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 16px; }
+.selector-modal.open { display: flex; }
+.selector-panel { width: min(760px, 100%); max-height: 88vh; background: var(--bg2); border: 1px solid var(--border2); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.45); display: flex; flex-direction: column; }
+.selector-head { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; background: var(--bg3); }
+.selector-title { font-size: 14px; color: var(--accent); font-family: var(--serif); flex: 1; }
+.selector-close, .selector-back { border: 1px solid var(--border2); background: var(--bg); color: var(--text2); width: 30px; height: 30px; border-radius: 9px; cursor: pointer; transition: all .15s; }
+.selector-close:hover, .selector-back:hover { border-color: var(--accent2); color: var(--accent); }
+.selector-body { padding: 14px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fit,minmax(170px,1fr)); gap: 9px; }
+.selector-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: pointer; transition: all .15s; }
+.selector-card:hover { border-color: var(--accent2); transform: translateY(-1px); background: var(--bg4); }
+.selector-card h4 { font-size: 13px; color: var(--text); margin-bottom: 5px; }
+.selector-card p { font-size: 11px; color: var(--text3); line-height: 1.5; }
+.selector-tag { padding: 9px 11px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); cursor: pointer; font-size: 12px; transition: all .15s; line-height: 1.5; }
+.selector-tag:hover { border-color: var(--accent2); color: var(--accent); background: var(--accent-dim); }
+
+/* PROMPT EDITOR */
+.prompt-view { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--rl); padding: 12px; font-family: var(--mono); font-size: 11px; line-height: 1.8; color: var(--text2); white-space: pre-wrap; word-break: break-all; }
+.prompt-editor-textarea { width: 100%; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--rl); color: var(--text); font-family: var(--mono); font-size: 11px; padding: 12px; resize: vertical; min-height: 300px; outline: none; line-height: 1.8; }
+.prompt-editor-textarea:focus { border-color: var(--accent2); }
+.prompt-scheme-bar { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+.scheme-chip { padding: 4px 10px; border: 1px solid var(--border2); border-radius: 999px; font-size: 11px; color: var(--text2); cursor: pointer; background: var(--bg3); transition: all .15s; display: flex; align-items: center; gap: 5px; }
+.scheme-chip:hover { border-color: var(--accent2); color: var(--accent); }
+.scheme-chip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+.scheme-chip .del { color: var(--text3); font-size: 10px; margin-left: 2px; }
+.scheme-chip .del:hover { color: var(--red); }
+.scheme-add { padding: 4px 10px; border: 1px dashed var(--border2); border-radius: 999px; font-size: 11px; color: var(--text3); cursor: pointer; background: none; transition: all .15s; }
+.scheme-add:hover { border-color: var(--accent); color: var(--accent); }
+.prompt-tool-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.prompt-tool-btn { padding: 5px 11px; border: 1px solid var(--border2); border-radius: var(--r); font-size: 11px; color: var(--text2); cursor: pointer; background: var(--bg3); transition: all .15s; font-family: var(--sans); }
+.prompt-tool-btn:hover { border-color: var(--accent2); color: var(--accent); }
+.prompt-tool-btn.primary { background: var(--accent2); border-color: var(--accent); color: var(--accent); }
+.prompt-tool-btn.primary:hover { background: var(--accent); color: var(--bg); }
+.prompt-notice { font-size: 11px; color: var(--green); margin-top: 6px; display: none; }
+
+/* CUSTOM DIALOG */
+.custom-dialog { position: fixed; inset: 0; background: rgba(0,0,0,.72); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.custom-dialog.open { display: flex; }
+.custom-box { width: min(380px,100%); background: var(--bg2); border: 1px solid var(--border2); border-radius: 14px; padding: 16px; }
+.custom-box h3 { margin-bottom: 10px; color: var(--accent); font-size: 14px; }
+.custom-box input { width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--text); padding: 8px 11px; border-radius: 9px; margin-bottom: 12px; font-family: var(--sans); font-size: 12px; outline: none; }
+.custom-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.custom-actions button { padding: 6px 12px; border-radius: 9px; border: 1px solid var(--border2); background: var(--bg3); color: var(--text2); cursor: pointer; font-size: 12px; font-family: var(--sans); }
+.custom-actions button.primary { background: var(--accent2); color: var(--accent); border-color: var(--accent); }
+
+/* ENCYCLOPEDIA VIEW */
+.enc-view-wrap { padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
+.enc-tag-pill { font-size: 11px; padding: 3px 9px; background: var(--bg4); border: 1px solid var(--border); border-radius: 20px; color: var(--text2); cursor: pointer; transition: all .1s; display: inline-block; }
+.enc-tag-pill:hover { border-color: var(--accent2); color: var(--accent); }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; height: auto; }
+  .sidebar, .rpanel { border: none; border-top: 1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">衣橱志<span>· 小说服装设计工具</span></div>
+  <nav class="header-nav">
+    <button class="hn-btn active" onclick="switchView('designer')">服装设计</button>
+    <button class="hn-btn" onclick="switchView('encyclopedia')">服装百科</button>
+    <button class="hn-btn" onclick="switchView('prompt')">提示词管理</button>
+  </nav>
+</header>
+
+<!-- ══════════ DESIGNER VIEW ══════════ -->
+<div class="layout" id="view-designer">
+
+<!-- LEFT SIDEBAR -->
+<aside class="sidebar">
+  <div>
+    <div class="panel-title">API 接入</div>
+    <div class="api-block">
+      <div class="api-row">
+        <label class="api-label">服务商</label>
+        <select class="api-sel" id="api-provider" onchange="onProviderChange()">
+          <option value="anthropic">Claude (Anthropic)</option>
+          <option value="openai">OpenAI / ChatGPT</option>
+          <option value="gemini">Gemini (Google)</option>
+          <option value="deepseek">DeepSeek</option>
+          <option value="custom">自定义 OpenAI 兼容</option>
+        </select>
+      </div>
+      <div class="api-row" id="custom-url-row" style="display:none">
+        <label class="api-label">API Base URL</label>
+        <input class="api-inp" id="api-baseurl" type="text" placeholder="https://your-proxy.com/v1" oninput="resetConnection()">
+      </div>
+      <div class="api-row">
+        <label class="api-label">API Key</label>
+        <input class="api-inp" id="api-key" type="password" placeholder="sk-…" autocomplete="off" oninput="resetConnection()">
+        <div class="api-hint">密钥仅存于本地，不会上传</div>
+      </div>
+      <div class="api-row" style="margin-bottom:4px">
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none">
+          <input type="checkbox" id="cors-proxy-toggle" onchange="onCorsProxyToggle()" style="accent-color:var(--accent);width:12px;height:12px">
+          <span style="font-size:11px;color:var(--text3)">启用 CORS 代理</span>
+        </label>
+        <div id="cors-proxy-warning" style="display:none;font-size:10px;color:var(--accent);margin-top:2px">⚠ 代理会转发你的请求（含 Key）</div>
+      </div>
+      <div class="api-btn-row">
+        <button class="api-btn primary" id="connect-btn" onclick="connectAndFetchModels()">连 接</button>
+      </div>
+      <div class="api-status"><div class="status-dot" id="api-dot"></div><span id="api-status-text">请填写 API Key 后连接</span></div>
+      <div class="api-row api-model-row" id="api-model-row">
+        <label class="api-label" style="margin-top:7px">选择模型</label>
+        <select class="api-sel" id="api-model-select" onchange="onModelSelect()"><option value="">— 请先连接 —</option></select>
+        <input class="api-inp" id="api-model-custom" type="text" placeholder="手动输入模型名" style="margin-top:5px;display:none" oninput="onModelCustomInput()">
+      </div>
+      <div class="api-btn-row" id="api-save-row" style="display:none">
+        <button class="api-btn" onclick="clearApiSettings()" style="flex:0 0 auto;padding:5px 7px">清除</button>
+        <button class="api-btn primary" onclick="saveApiSettings()">保存设置</button>
+      </div>
+      <div id="api-save-notice" style="font-size:10px;color:var(--green);margin-top:3px;display:none">✓ 设置已保存</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel-title" style="display:flex;align-items:center;justify-content:space-between">
+      <span>角色人设</span>
+      <button class="char-new-btn" onclick="openNewCharDialog()">＋ 新建</button>
+    </div>
+    <div class="char-block">
+      <!-- 角色切换栏 -->
+      <div id="char-switcher" style="margin-bottom:8px;display:flex;flex-direction:column;gap:4px"></div>
+      <!-- 当前角色名行 -->
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
+        <span id="char-active-name" style="font-size:12px;color:var(--accent);font-family:var(--serif);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">未选择角色</span>
+        <button class="char-icon-btn" title="重命名" onclick="renameActiveChar()">✎</button>
+        <button class="char-icon-btn char-del-btn" title="删除此角色" onclick="deleteActiveChar()">✕</button>
+      </div>
+      <textarea id="char-profile" placeholder="在此输入角色人设，例如：&#10;·名字：陈玉篱，女，28岁&#10;·性格：冷静克制&#10;·身份：废土信息掮客&#10;·外貌：中等身高，偏瘦，短发&#10;AI 将根据人设推敲服装风格与气质。" oninput="autoSaveActiveChar()"></textarea>
+      <div id="char-save-hint" style="font-size:10px;color:var(--green);margin-top:3px;display:none">✓ 已自动保存</div>
+    </div>
+  </div>
+</aside>
+
+<!-- 新建角色 Dialog -->
+<div class="custom-dialog" id="new-char-dialog">
+  <div class="custom-box">
+    <h3>新建角色</h3>
+    <input type="text" id="new-char-name-input" placeholder="角色名，如：陈玉篱" maxlength="30">
+    <div class="custom-actions">
+      <button onclick="closeNewCharDialog()">取消</button>
+      <button class="primary" onclick="confirmNewChar()">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN AREA -->
+<main class="main">
+  <div class="kw-bar">
+    <input type="text" id="kw-input" placeholder="输入关键词，其余由 AI 补全 · 如：末世赛博朋克、去酒馆、棕色皮衣">
+    <button class="gen-btn" id="gen-btn" onclick="generate()">生 成</button>
+  </div>
+
+  <div class="legend">
+    <div class="leg"><div class="leg-box leg-solid"></div>用户填写 / 关键词推导</div>
+    <div class="leg"><div class="leg-box leg-dashed"></div>AI 自由补全</div>
+  </div>
+
+  <!-- 第零层：贴身 -->
+  <div class="form-card">
+    <div class="form-card-head" onclick="toggleCard(this)">
+      <span class="fch-icon">✦</span>
+      <span class="fch-title">第零层 · 贴身服饰（可选）</span>
+      <span class="fch-badge b-opt">内衣 / 睡衣 / 紧身衣</span>
+      <span class="fch-arrow open">▾</span>
+    </div>
+    <div class="form-card-body open">
+      <div class="layer-tabs">
+        <div class="layer-tab active" onclick="switchLayerTab(this,'nightwear')">睡衣</div>
+        <div class="layer-tab" onclick="switchLayerTab(this,'underwear_sys')">内衣</div>
+        <div class="layer-tab" onclick="switchLayerTab(this,'corsetry')">紧身衣</div>
+      </div>
+      <div class="layer-pane active" id="pane-nightwear">
+        <div class="section-divider">睡衣与晚间服</div>
+        <div class="fg3">
+          <div class="fi"><label>类型</label><input type="text" id="nightwear_type" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('nightwear_type','nightwear','睡衣')"></div>
+          <div class="fi"><label>颜色</label><input type="text" id="nightwear_color" placeholder="自由输入"></div>
+          <div class="fi"><label>领口 / 领型</label><input type="text" id="nightwear_collar" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('nightwear_collar','collar','领型')"></div>
+          <div class="fi"><label>袖型</label><input type="text" id="nightwear_sleeve" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('nightwear_sleeve','sleeve','袖型')"></div>
+          <div class="fi"><label>材质</label><input type="text" id="nightwear_fabric" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('nightwear_fabric','fabric','睡衣材质')"></div>
+        </div>
+      </div>
+      <div class="layer-pane" id="pane-underwear_sys">
+        <div class="section-divider">内衣系统</div>
+        <div class="fg3">
+          <div class="fi"><label>胸罩类型</label><input type="text" id="bra_type" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('bra_type','bra','胸罩款式')"></div>
+          <div class="fi"><label>女性内裤</label><input type="text" id="brief_type" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('brief_type','panties','女性内裤')"></div>
+          <div class="fi"><label>男性内裤</label><input type="text" id="mens_brief_type" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('mens_brief_type','mens_underpants','男性内裤')"></div>
+          <div class="fi"><label>颜色</label><input type="text" id="underwear_color" placeholder="自由输入"></div>
+          <div class="fi"><label>材质</label><input type="text" id="underwear_fabric" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('underwear_fabric','fabric','内衣材质')"></div>
+        </div>
+      </div>
+      <div class="layer-pane" id="pane-corsetry">
+        <div class="section-divider">紧身衣与内衬</div>
+        <div class="fg3">
+          <div class="fi"><label>类型</label><input type="text" id="corset_type" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('corset_type','corsetry','紧身衣')"></div>
+          <div class="fi"><label>颜色</label><input type="text" id="corset_color" placeholder="自由输入"></div>
+          <div class="fi"><label>材质</label><input type="text" id="corset_fabric" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('corset_fabric','fabric','紧身衣材质')"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 第一层：定性 -->
+  <div class="form-card">
+    <div class="form-card-head" onclick="toggleCard(this)">
+      <span class="fch-icon">◈</span>
+      <span class="fch-title">第一层 · 服装定性</span>
+      <span class="fch-badge b-req">核心骨架</span>
+      <span class="fch-arrow open">▾</span>
+    </div>
+    <div class="form-card-body open">
+      <div class="fg">
+        <div class="fi"><label>服装大类</label>
+          <select id="f_category">
+            <option value="">— AI 决定 —</option>
+            <option>正装 / 礼服</option><option>套装 Suit</option><option>职业装 / 制服</option><option>休闲装</option>
+            <option>运动装</option><option>外套</option><option>内衣 / 贴身</option>
+            <option>家居服 / 睡衣</option><option>传统 / 民族服装</option><option>特种职业装</option>
+          </select>
+        </div>
+        <div class="fi"><label>整体风格 <span class="fi-ai">AI</span></label><input type="text" id="f_style" class="ai-fill selector-input" placeholder="点击选择风格…" onclick="openEncSelector('f_style','style','整体风格')"></div>
+        <div class="fi"><label>适用场合</label><input type="text" id="f_occasion" class="ai-fill" placeholder="AI 推导"></div>
+        <div class="fi"><label>季节 / 时段</label>
+          <select id="f_season">
+            <option value="">— AI 推导 —</option>
+            <option>春季</option><option>夏季</option><option>秋季</option><option>冬季</option>
+            <option>四季通用</option><option>正式晚间</option>
+          </select>
+        </div>
+        <div class="fi"><label>主色调</label><input type="text" id="f_color_main" class="selector-input" placeholder="点击选择…" onclick="openEncSelector('f_color_main','color','主色调')"></div>
+        <div class="fi"><label>辅色 / 撞色</label><input type="text" id="f_color_sub" class="selector-input" placeholder="点击选择…" onclick="openEncSelector('f_color_sub','color','辅色')"></div>
+        <div class="fi"><label>主体面料</label><input type="text" id="f_fabric" class="selector-input" placeholder="点击选择…" onclick="openEncSelector('f_fabric','fabric','主体面料')"></div>
+        <div class="fi"><label>整体廓形</label>
+          <select id="f_silhouette">
+            <option value="">— AI 推导 —</option>
+            <option>A字形（收腰放摆）</option>
+            <option>H形（直筒矩形）</option>
+            <option>I形（铅笔/Column）</option>
+            <option>V形（倒三角）</option>
+            <option>X形（沙漏收腰）</option>
+            <option>Y形（宽肩窄摆）</option>
+            <option>O形（茧型/气球型）</option>
+            <option>T形（宽肩直落）</option>
+            <option>S曲线（鱼尾修身）</option>
+            <option>梯形（宽下窄上）</option>
+            <option>不对称轮廓</option>
+            <option>曲线廓形</option>
+            <option>帝国线 Empire Line</option>
+            <option>公主线 Princess Line</option>
+            <option>芭蕾舞 Ballerina</option>
+            <option>晚会礼服 Ballgown</option>
+            <option>气球型 Balloon</option>
+            <option>钟形 Bell</option>
+            <option>茧型 Cocoon</option>
+            <option>沙漏 Hourglass</option>
+            <option>美人鱼 Mermaid</option>
+            <option>蹒跚裙 Hobble</option>
+            <option>巴斯尔弯曲 Bustle/S-bend</option>
+            <option>喇叭型 Trumpet</option>
+            <option>上紧下宽 Fit and Flare</option>
+            <option>鞘形 Sheath</option>
+            <option>陀螺型 Peg-top</option>
+            <option>宽肩式 Spindle</option>
+            <option>分层式 Tiered</option>
+            <option>帐篷式 Trapeze/Tent</option>
+            <option>露肩 Off-shoulder</option>
+            <option>上宽下紧 Flare and Tight</option>
+            <option>上宽下直 Flare and Tube</option>
+            <option>Oversize 宽松</option>
+            <option>修身贴体 Fitted</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 第二层：上装 -->
+  <div class="form-card">
+    <div class="form-card-head" onclick="toggleCard(this)">
+      <span class="fch-icon">◇</span>
+      <span class="fch-title">第二层 · 上装结构设计</span>
+      <span class="fch-badge b-opt">分层叠穿</span>
+      <span class="fch-arrow open">▾</span>
+    </div>
+    <div class="form-card-body open">
+      <div class="layer-tabs">
+        <div class="layer-tab active" onclick="switchLayerTab(this,'inner')">内搭</div>
+        <div class="layer-tab" onclick="switchLayerTab(this,'middle')">夹层</div>
+        <div class="layer-tab" onclick="switchLayerTab(this,'outer')">外套</div>
+        <div class="layer-tab" onclick="switchLayerTab(this,'suit_tab')">套装</div>
+        <div class="layer-tab" onclick="switchLayerTab(this,'dress_tab')">连衣裙</div>
+      </div>
+
+      <div class="layer-pane active" id="pane-inner">
+        <div class="section-divider">内搭上衣</div>
+        <div class="fg3">
+          <div class="fi"><label>衬衫 / 上衣类型</label><input type="text" id="inner_top" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('inner_top','shirt','衬衫与针织衫')"></div>
+          <div class="fi"><label>女装衬衫 / 上衣</label><input type="text" id="inner_blouse" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('inner_blouse','blouse','女装衬衫与上衣')"></div>
+          <div class="fi"><label>颜色</label><input type="text" id="inner_color" placeholder="自由输入"></div>
+          <div class="fi"><label>领口形状</label><input type="text" id="inner_neckline" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('inner_neckline','neckline','领口形状')"></div>
+          <div class="fi"><label>领子款式</label><input type="text" id="inner_collar" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('inner_collar','collar','领子款式')"></div>
+          <div class="fi"><label>袖型</label><input type="text" id="inner_sleeve" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('inner_sleeve','sleeve','袖型')"></div>
+          <div class="fi"><label>袖口款式</label><input type="text" id="inner_cuff" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('inner_cuff','cuff','袖口款式')"></div>
+          <div class="fi"><label>开襟方式</label><input type="text" id="inner_opening" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('inner_opening','opening','开襟方式')"></div>
+          <div class="fi"><label>口袋</label><input type="text" id="inner_pocket" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('inner_pocket','pocket','口袋款式')"></div>
+          <div class="fi"><label>育克 / 下摆细节</label><input type="text" id="inner_shirt_detail" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('inner_shirt_detail','shirt_detail','衬衫育克与下摆')"></div>
+          <div class="fi"><label>面料</label><input type="text" id="inner_fabric" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('inner_fabric','fabric','内搭面料')"></div>
+          <div class="fi"><label>工艺 / 装饰</label><input type="text" id="inner_craft" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('inner_craft','detail','工艺装饰')"></div>
+        </div>
+      </div>
+
+      <div class="layer-pane" id="pane-middle">
+        <div class="section-divider">夹层（背心 / 毛衣 / 开衫）</div>
+        <div class="fg3">
+          <div class="fi"><label>背心 / 马甲</label><input type="text" id="middle_vest" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('middle_vest','vest_sweater','背心与马甲')"></div>
+          <div class="fi"><label>毛衣类型</label><input type="text" id="middle_sweater" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('middle_sweater','vest_sweater','毛衣')"></div>
+          <div class="fi"><label>开衫类型</label><input type="text" id="middle_cardigan" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('middle_cardigan','vest_sweater','开襟衫')"></div>
+          <div class="fi"><label>颜色</label><input type="text" id="middle_color" placeholder="自由输入"></div>
+          <div class="fi"><label>领口 / 领子</label><input type="text" id="middle_collar" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('middle_collar','collar','领子款式')"></div>
+          <div class="fi"><label>领口形状</label><input type="text" id="middle_neckline" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('middle_neckline','neckline','领口形状')"></div>
+          <div class="fi"><label>袖型</label><input type="text" id="middle_sleeve" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('middle_sleeve','sleeve','袖型')"></div>
+          <div class="fi"><label>袖口款式</label><input type="text" id="middle_cuff" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('middle_cuff','cuff','袖口款式')"></div>
+          <div class="fi"><label>开襟 / 门襟</label><input type="text" id="middle_placket" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('middle_placket','opening','开襟方式')"></div>
+          <div class="fi"><label>口袋</label><input type="text" id="middle_pocket" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('middle_pocket','pocket','口袋款式')"></div>
+          <div class="fi"><label>腰线 / 下摆</label><input type="text" id="middle_waist" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('middle_waist','waist_hem','腰线下摆')"></div>
+          <div class="fi"><label>面料</label><input type="text" id="middle_fabric" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('middle_fabric','fabric','夹层面料')"></div>
+        </div>
+      </div>
+
+      <div class="layer-pane" id="pane-outer">
+        <div class="section-divider">外套 / 大衣</div>
+        <div class="fg3">
+          <div class="fi"><label>夹克类型</label><input type="text" id="outer_jacket" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('outer_jacket','jacket','夹克')"></div>
+          <div class="fi"><label>大衣类型</label><input type="text" id="outer_coat" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('outer_coat','coat','大衣')"></div>
+          <div class="fi"><label>颜色</label><input type="text" id="outer_color" placeholder="自由输入"></div>
+          <div class="fi"><label>领子款式</label><input type="text" id="outer_collar" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('outer_collar','collar','领子款式')"></div>
+          <div class="fi"><label>翻领款式</label><input type="text" id="outer_lapel" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('outer_lapel','lapel','翻领款式')"></div>
+          <div class="fi"><label>袖型</label><input type="text" id="outer_sleeve" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('outer_sleeve','sleeve','袖型')"></div>
+          <div class="fi"><label>袖口款式</label><input type="text" id="outer_cuff" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('outer_cuff','cuff','袖口款式')"></div>
+          <div class="fi"><label>开襟方式</label><input type="text" id="outer_opening" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('outer_opening','opening','开襟方式')"></div>
+          <div class="fi"><label>口袋</label><input type="text" id="outer_pocket" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('outer_pocket','pocket','口袋款式')"></div>
+          <div class="fi"><label>肩线 / 结构细节</label><input type="text" id="outer_shoulder" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('outer_shoulder','jacket_detail','肩线与结构')"></div>
+          <div class="fi"><label>面料</label><input type="text" id="outer_fabric" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('outer_fabric','fabric','外套面料')"></div>
+        </div>
+      </div>
+
+      <div class="layer-pane" id="pane-suit_tab">
+        <div class="section-divider">套装系统</div>
+        <div class="fg3">
+          <div class="fi"><label>套装类型</label><input type="text" id="suit_type" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('suit_type','suit','套装类型')"></div>
+          <div class="fi"><label>男士套装款式</label><input type="text" id="suit_mens" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('suit_mens','suit','男士套装')"></div>
+          <div class="fi"><label>女士套装款式</label><input type="text" id="suit_womens" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('suit_womens','suit','女士套装')"></div>
+          <div class="fi"><label>制作模式</label><input type="text" id="suit_mode" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('suit_mode','suit','制作模式')"></div>
+          <div class="fi"><label>件数</label>
+            <select id="suit_pieces">
+              <option value="">— 自由组合 —</option>
+              <option>两件套（夹克＋裤/裙）</option>
+              <option>三件套（夹克＋裤＋背心）</option>
+              <option>单件夹克</option>
+              <option>搭配西裤</option>
+              <option>搭配裙装</option>
+            </select>
+          </div>
+          <div class="fi"><label>扣型</label>
+            <select id="suit_button">
+              <option value="">— AI 推导 —</option>
+              <option>单排扣 Single-breasted</option>
+              <option>双排扣 Double-breasted</option>
+            </select>
+          </div>
+          <div class="fi"><label>颜色</label><input type="text" id="suit_color" placeholder="自由输入"></div>
+          <div class="fi"><label>面料</label><input type="text" id="suit_fabric" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('suit_fabric','fabric','套装面料')"></div>
+          <div class="fi"><label>领子款式</label><input type="text" id="suit_collar" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('suit_collar','collar','领子款式')"></div>
+          <div class="fi"><label>翻领款式</label><input type="text" id="suit_lapel" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('suit_lapel','lapel','翻领款式')"></div>
+          <div class="fi"><label>袖型</label><input type="text" id="suit_sleeve" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('suit_sleeve','sleeve','袖型')"></div>
+          <div class="fi"><label>袖口款式</label><input type="text" id="suit_cuff" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('suit_cuff','cuff','袖口款式')"></div>
+          <div class="fi"><label>开襟方式</label><input type="text" id="suit_opening" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('suit_opening','opening','开襟方式')"></div>
+          <div class="fi"><label>口袋</label><input type="text" id="suit_pocket" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('suit_pocket','pocket','口袋款式')"></div>
+          <div class="fi"><label>肩线细节</label><input type="text" id="suit_shoulder" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('suit_shoulder','jacket_detail','肩线细节')"></div>
+          <div class="fi"><label>工艺 / 装饰</label><input type="text" id="suit_craft" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('suit_craft','detail','工艺装饰')"></div>
+        </div>
+      </div>
+
+      <div class="layer-pane" id="pane-dress_tab">
+        <div class="section-divider">连衣裙</div>
+        <div class="fg3">
+          <div class="fi"><label>款式类型</label><input type="text" id="dress_type" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('dress_type','dress_type','款式类型')"></div>
+          <div class="fi"><label>廓形特征</label><input type="text" id="dress_silhouette" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('dress_silhouette','dress_silhouette','廓形特征')"></div>
+          <div class="fi"><label>裙长</label><input type="text" id="dress_length" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('dress_length','dress_length','裙长')"></div>
+          <div class="fi"><label>腰线类型</label><input type="text" id="dress_waist" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('dress_waist','dress_waist','腰线类型')"></div>
+          <div class="fi"><label>颜色</label><input type="text" id="dress_color" placeholder="自由输入"></div>
+          <div class="fi"><label>领口形状</label><input type="text" id="dress_neckline" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('dress_neckline','neckline','领口形状')"></div>
+          <div class="fi"><label>领型</label><input type="text" id="dress_collar" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('dress_collar','collar','领型')"></div>
+          <div class="fi"><label>袖型</label><input type="text" id="dress_sleeve" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('dress_sleeve','sleeve','袖型')"></div>
+          <div class="fi"><label>袖口款式</label><input type="text" id="dress_cuff" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('dress_cuff','cuff','袖口款式')"></div>
+          <div class="fi"><label>开襟方式</label><input type="text" id="dress_opening" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('dress_opening','opening','开襟方式')"></div>
+          <div class="fi"><label>面料</label><input type="text" id="dress_fabric" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('dress_fabric','fabric','连衣裙面料')"></div>
+          <div class="fi"><label>工艺 / 装饰</label><input type="text" id="dress_craft" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('dress_craft','detail','工艺装饰')"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 第三层：下装 -->
+  <div class="form-card">
+    <div class="form-card-head" onclick="toggleCard(this)">
+      <span class="fch-icon">◉</span>
+      <span class="fch-title">第三层 · 下装结构设计</span>
+      <span class="fch-badge b-opt">裤装 / 裙装</span>
+      <span class="fch-arrow open">▾</span>
+    </div>
+    <div class="form-card-body open">
+      <div class="layer-tabs">
+        <div class="layer-tab active" onclick="switchLayerTab(this,'pants')">裤装</div>
+        <div class="layer-tab" onclick="switchLayerTab(this,'skirt')">半身裙</div>
+        <div class="layer-tab" onclick="switchLayerTab(this,'jumpsuit_pane')">连衣裤</div>
+      </div>
+      <div class="layer-pane active" id="pane-pants">
+        <div class="section-divider">裤装</div>
+        <div class="fg3">
+          <div class="fi"><label>裤装类型</label><input type="text" id="pants_type" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('pants_type','pants_type','裤装类型')"></div>
+          <div class="fi"><label>牛仔款式</label><input type="text" id="pants_denim" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('pants_denim','pants_denim','牛仔款式')"></div>
+          <div class="fi"><label>廓形 / 裤长</label><input type="text" id="pants_shape" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('pants_shape','pants_silhouette','廓形与裤长')"></div>
+          <div class="fi"><label>颜色</label><input type="text" id="pants_color" placeholder="自由输入"></div>
+          <div class="fi"><label>前腰褶 / 裤耳</label><input type="text" id="pants_detail" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('pants_detail','pants_detail','裤装结构细节')"></div>
+          <div class="fi"><label>牛仔裤口袋细节</label><input type="text" id="pants_jeans_detail" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('pants_jeans_detail','jeans_detail','牛仔裤结构细节')"></div>
+          <div class="fi"><label>口袋</label><input type="text" id="pants_pocket" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('pants_pocket','pocket','口袋款式')"></div>
+          <div class="fi"><label>面料</label><input type="text" id="pants_fabric" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('pants_fabric','fabric','裤装面料')"></div>
+          <div class="fi"><label>工艺 / 装饰</label><input type="text" id="pants_craft" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('pants_craft','detail','工艺装饰')"></div>
+        </div>
+      </div>
+      <div class="layer-pane" id="pane-skirt">
+        <div class="section-divider">半身裙</div>
+        <div class="fg3">
+          <div class="fi"><label>裙装类型</label><input type="text" id="skirt_type" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('skirt_type','skirt_type','半身裙款式')"></div>
+          <div class="fi"><label>裙长</label><input type="text" id="skirt_shape" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('skirt_shape','skirt_length','裙长')"></div>
+          <div class="fi"><label>腰线 / 腰头</label><input type="text" id="skirt_waist" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('skirt_waist','waist_hem','腰线与下摆')"></div>
+          <div class="fi"><label>颜色</label><input type="text" id="skirt_color" placeholder="自由输入"></div>
+          <div class="fi"><label>面料</label><input type="text" id="skirt_fabric" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('skirt_fabric','fabric','裙装面料')"></div>
+          <div class="fi"><label>口袋</label><input type="text" id="skirt_pocket" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('skirt_pocket','pocket','口袋款式')"></div>
+          <div class="fi"><label>工艺 / 装饰</label><input type="text" id="skirt_craft" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('skirt_craft','detail','工艺装饰')"></div>
+        </div>
+      </div>
+      <div class="layer-pane" id="pane-jumpsuit_pane">
+        <div class="section-divider">连衣裤 / 连体服</div>
+        <div class="fg3">
+          <div class="fi"><label>连衣裤类型</label><input type="text" id="jumpsuit_type" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('jumpsuit_type','jumpsuit','连衣裤类型')"></div>
+          <div class="fi"><label>颜色</label><input type="text" id="jumpsuit_color" placeholder="自由输入"></div>
+          <div class="fi"><label>领口形状</label><input type="text" id="jumpsuit_neckline" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('jumpsuit_neckline','neckline','领口形状')"></div>
+          <div class="fi"><label>领型</label><input type="text" id="jumpsuit_collar" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('jumpsuit_collar','collar','领型')"></div>
+          <div class="fi"><label>袖型</label><input type="text" id="jumpsuit_sleeve" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('jumpsuit_sleeve','sleeve','袖型')"></div>
+          <div class="fi"><label>袖口款式</label><input type="text" id="jumpsuit_cuff" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('jumpsuit_cuff','cuff','袖口款式')"></div>
+          <div class="fi"><label>开襟方式</label><input type="text" id="jumpsuit_opening" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('jumpsuit_opening','opening','开襟方式')"></div>
+          <div class="fi"><label>口袋</label><input type="text" id="jumpsuit_pocket" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('jumpsuit_pocket','pocket','口袋款式')"></div>
+          <div class="fi"><label>腰线 / 下摆</label><input type="text" id="jumpsuit_waist" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('jumpsuit_waist','waist_hem','腰线下摆')"></div>
+          <div class="fi"><label>面料</label><input type="text" id="jumpsuit_fabric" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('jumpsuit_fabric','fabric','连衣裤面料')"></div>
+          <div class="fi"><label>工艺 / 装饰</label><input type="text" id="jumpsuit_craft" class="selector-input" placeholder="点击或输入" onclick="openEncSelector('jumpsuit_craft','detail','工艺装饰')"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="form-card">
+    <div class="form-card-head" onclick="toggleCard(this)">
+      <span class="fch-icon">◎</span>
+      <span class="fch-title">第四层 · 配饰系统</span>
+      <span class="fch-badge b-acc">独立考量</span>
+      <span class="fch-arrow open">▾</span>
+    </div>
+    <div class="form-card-body open">
+      <div class="fg3">
+        <div class="fi"><label>帽子 <span class="fi-ai">AI</span></label><input type="text" id="a_hat" class="ai-fill selector-input" placeholder="点击选择…" onclick="openEncSelector('a_hat','hat','帽子')"></div>
+        <div class="fi"><label>鞋履 <span class="fi-ai">AI</span></label><input type="text" id="a_shoes" class="ai-fill selector-input" placeholder="点击选择…" onclick="openEncSelector('a_shoes','shoes','鞋履')"></div>
+        <div class="fi"><label>袜子 / 腿部 <span class="fi-ai">AI</span></label><input type="text" id="a_socks" class="ai-fill selector-input" placeholder="点击选择…" onclick="openEncSelector('a_socks','socks_legwear','袜子与腿部')"></div>
+        <div class="fi"><label>手套 <span class="fi-ai">AI</span></label><input type="text" id="a_gloves" class="ai-fill selector-input" placeholder="点击选择…" onclick="openEncSelector('a_gloves','glove','手套')"></div>
+        <div class="fi"><label>围巾 / 颈部 <span class="fi-ai">AI</span></label><input type="text" id="a_scarf" class="ai-fill selector-input" placeholder="点击选择…" onclick="openEncSelector('a_scarf','scarf_neck','围巾与颈部')"></div>
+        <div class="fi"><label>腰带 / 腰封 <span class="fi-ai">AI</span></label><input type="text" id="a_belt" class="ai-fill selector-input" placeholder="点击选择…" onclick="openEncSelector('a_belt','belt','腰带与腰封')"></div>
+        <div class="fi"><label>包袋 <span class="fi-ai">AI</span></label><input type="text" id="a_bag" class="ai-fill selector-input" placeholder="点击选择…" onclick="openEncSelector('a_bag','bag','包袋')"></div>
+        <div class="fi"><label>首饰 / 珠宝 <span class="fi-ai">AI</span></label><input type="text" id="a_jewelry" class="ai-fill selector-input" placeholder="点击选择…" onclick="openEncSelector('a_jewelry','jewelry','首饰与珠宝')"></div>
+        <div class="fi"><label>眼镜 / 扇子 <span class="fi-ai">AI</span></label><input type="text" id="a_eyewear" class="ai-fill selector-input" placeholder="点击选择…" onclick="openEncSelector('a_eyewear','eyewear_glove','眼镜与扇子')"></div>
+        <div class="fi"><label>正装配饰 <span class="fi-ai">AI</span></label><input type="text" id="a_formal" class="ai-fill selector-input" placeholder="点击选择…" onclick="openEncSelector('a_formal','formal_accessory','正装配饰')"></div>
+        <div class="fi"><label>面具 <span class="fi-ai">AI</span></label><input type="text" id="a_mask" class="ai-fill selector-input" placeholder="点击选择…" onclick="openEncSelector('a_mask','mask','面具')"></div>
+        <div class="fi"><label>钱包 / 小皮件 <span class="fi-ai">AI</span></label><input type="text" id="a_wallet" class="ai-fill selector-input" placeholder="点击选择…" onclick="openEncSelector('a_wallet','wallet','钱包与小皮件')"></div>
+        <div class="fi"><label>其他配饰</label><input type="text" id="a_other" class="ai-fill" placeholder="自由输入"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 第五层：语境 -->
+  <div class="form-card">
+    <div class="form-card-head" onclick="toggleCard(this)">
+      <span class="fch-icon">◎</span>
+      <span class="fch-title">第五层 · 角色语境</span>
+      <span class="fch-badge b-opt">辅助基调</span>
+      <span class="fch-arrow">▾</span>
+    </div>
+    <div class="form-card-body">
+      <div class="fg3">
+        <div class="fi"><label>性别气质</label>
+          <select id="p_gender"><option value="">— AI 推导 —</option><option>女性 / 偏女性</option><option>男性 / 偏男性</option><option>中性 / 雌雄莫辨</option></select>
+        </div>
+        <div class="fi"><label>世界观 / 时代</label><input type="text" id="p_world" class="ai-fill" placeholder="AI 推导"></div>
+        <div class="fi"><label>此刻场景</label><input type="text" id="p_scene" class="ai-fill" placeholder="AI 推导"></div>
+        <div class="fi"><label>描写基调</label>
+          <select id="p_tone"><option value="">— AI 推导 —</option><option>冷静克制</option><option>华美繁复</option><option>轻盈日常</option><option>阴郁压抑</option><option>热烈张扬</option><option>诙谐轻松</option></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- RIGHT PANEL -->
+<aside class="rpanel">
+  <div class="rp-tabs">
+    <div class="rp-tab on" onclick="switchRTab('result')">生成结果</div>
+    <div class="rp-tab" onclick="switchRTab('prompt_view')">当前提示词</div>
+  </div>
+  <div class="rp-pane on" id="rp-result">
+    <div class="result-section">
+      <div class="rs-title">服装设计表</div>
+      <div id="result-table"><div style="color:var(--text3);font-size:12px;font-style:italic">填写关键词后点击「生成」…</div></div>
+    </div>
+    <div class="result-section">
+      <div class="rs-title">自然语言描写</div>
+      <div class="prose-box empty" id="result-prose">等待生成…</div>
+      <button class="copy-btn" onclick="copyProse()" id="copy-prose-btn" style="display:none">复制描写</button>
+      <button class="export-btn" onclick="exportTxt()" id="export-txt-btn" style="display:none">⬇ 导出 TXT</button>
+    </div>
+  </div>
+  <div class="rp-pane" id="rp-prompt_view">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.6">当前激活的系统提示词（只读预览）。如需编辑，请前往「提示词管理」。</div>
+    <div class="prompt-view" id="prompt-view-content" style="max-height:400px;overflow-y:auto"></div>
+    <button class="copy-btn" onclick="copyCurrentPrompt()" style="margin-top:7px">复制提示词</button>
+  </div>
+</aside>
+
+</div>
+
+<!-- ══════════ ENCYCLOPEDIA VIEW ══════════ -->
+<div id="view-encyclopedia" style="display:none">
+  <div class="enc-view-wrap">
+    <h2 style="font-family:var(--serif);color:var(--accent);font-size:20px;margin-bottom:4px">服装描写百科全书</h2>
+    <p style="color:var(--text3);font-size:13px;margin-bottom:1rem">点击词条可注入关键词栏</p>
+    <input type="text" id="enc2-search" oninput="encSearch2(this.value)" placeholder="搜索所有词条…" style="width:100%;max-width:380px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-size:13px;padding:7px 11px;outline:none;margin-bottom:1.25rem">
+    <div id="enc2-content"></div>
+  </div>
+</div>
+
+<!-- ══════════ PROMPT MANAGER VIEW ══════════ -->
+<div id="view-prompt" style="display:none;padding:2rem;max-width:860px;margin:0 auto">
+  <h2 style="font-family:var(--serif);color:var(--accent);font-size:20px;margin-bottom:4px">提示词管理</h2>
+  <p style="color:var(--text3);font-size:13px;margin-bottom:1.25rem">可编辑提示词、保存多套方案，方案自动持久化到本地。</p>
+
+  <div class="prompt-scheme-bar" id="scheme-bar"></div>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+    <span style="font-size:11px;color:var(--text3)">新方案名：</span>
+    <input id="new-scheme-name" type="text" placeholder="如：古典礼服风" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-size:12px;padding:4px 9px;outline:none;width:160px">
+    <button class="scheme-add" onclick="addScheme()">＋ 创建方案</button>
+  </div>
+
+  <textarea id="prompt-editor" class="prompt-editor-textarea" placeholder="在此编辑系统提示词…" oninput="onPromptEdit()"></textarea>
+
+  <div class="prompt-tool-row">
+    <button class="prompt-tool-btn primary" onclick="saveCurrentScheme()">保存当前方案</button>
+    <button class="prompt-tool-btn" onclick="resetToDefault()">重置为默认</button>
+    <button class="prompt-tool-btn" onclick="copyEditorPrompt()">复制提示词</button>
+  </div>
+  <div class="prompt-notice" id="prompt-notice">✓ 已保存</div>
+
+  <div style="margin-top:1.5rem;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl)">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px;letter-spacing:.05em">变量说明（提示词中可使用）</div>
+    <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;font-family:var(--mono);color:var(--text2)">
+      <span><span style="color:var(--accent)">{CHARACTER}</span> → 角色人设</span>
+      <span><span style="color:var(--accent)">{KEYWORDS}</span> → 用户输入的关键词</span>
+      <span><span style="color:var(--accent)">{FILLED_FIELDS}</span> → 表单中已填写的字段</span>
+      <span><span style="color:var(--accent)">{ENC_INDEX}</span> → 服装百科分类索引（自动注入）</span>
+    </div>
+  </div>
+</div>
+
+<!-- SELECTOR MODAL -->
+<div class="selector-modal" id="selector-modal">
+  <div class="selector-panel">
+    <div class="selector-head">
+      <button class="selector-back" id="selector-back" onclick="selectorGoBack()" style="display:none">←</button>
+      <div class="selector-title" id="selector-title">选择词条</div>
+      <button class="selector-close" onclick="closeSelector()">✕</button>
+    </div>
+    <div class="selector-body" id="selector-body"></div>
+  </div>
+</div>
+
+<!-- CUSTOM DIALOG -->
+<div class="custom-dialog" id="custom-dialog">
+  <div class="custom-box">
+    <h3>自定义添加</h3>
+    <input type="text" id="custom-input" placeholder="输入你的自定义内容">
+    <div class="custom-actions">
+      <button onclick="closeCustomDialog()">取消</button>
+      <button class="primary" onclick="confirmCustomInput()">确定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// 百科数据（完整）
+// ══════════════════════════════════════════
+const ENC_DATA = [
+/* ── 套装系统 ── */
+{id:'suit',name:'套装系统',subs:[
+  {name:'男士西装套装',tags:['三件式西装Three-piece Suit（夹克+裤+背心）','两件式西装Two-piece Suit（夹克+裤）','单排扣西装Single-breasted Suit','双排扣西装Double-breasted Suit','自由组合套装Separates（分拆出售）','开襟衫套装Cardigan Suit','中山装Mao/Tunic Suit']},
+  {name:'女士套装',tags:['女士西裤套装Pant Suit','女士职业裙套装Skirt Suit','博莱罗夹克套装Bolero Suit','裙裤套装Culotte Suit','香奈儿风格套装Chanel-style Suit']},
+  {name:'制作模式',tags:['全定制Bespoke（裁缝师专属版形）','半定制Made-to-measure（按体型微调版型）','成衣Ready-to-wear（标准尺寸大量生产）','自由组合Separates（夹克裤子分色材质分开购买）']}
+]},
+/* ── 贴身服饰系统 ── */
+{id:'nightwear',name:'睡衣与晚间服',subs:[
+  {name:'连衣式睡衣',tags:['Slip Dress 吊带睡衣裙','Nightgown 女装长睡袍','Babydoll 娃娃裙睡衣','Negligee 女装轻薄透明睡衣','Nightshirt 宽松睡衣长衫','Chemise 女吊带衬睡裙']},
+  {name:'套装式睡衣',tags:['Pajama Set 睡衣套装（上衣+长裤）','Camisole Pajama Set 吊带睡衣套装','Short Pajama Set 短裤睡衣套装']},
+  {name:'袍式/连身式',tags:['Dressing Gown / Bathrobe 睡袍/浴衣','Kimono Nightwear 和服型睡衣','Onesie 连身衣/睡袋衣']},
+  {name:'功能性/特殊材质',tags:['Silk Nightwear 真丝睡衣','Cotton Nightwear 全棉睡衣','Thermal Nightwear 保暖睡衣']}
+]},
+{id:'bra',name:'胸罩款式',subs:[
+  {name:'罩杯结构分类',tags:['Balconette 小阳台式（半托宽肩带）','Demi Cup Bra 半杯胸罩（覆盖乳房二分之一至四分之三）','Full Cup Bra 全杯胸罩（完全包覆）','Full Support Bra 全包袱支撑胸罩','Soft Cup Bra 软杯胸罩（无衬垫无钢圈）','Contour Bra / Molded Cup Bra 塑型/模塑胸罩','Padded Bra / Push-up Bra 加厚上托胸罩','Plunge Bra 深V深露式胸罩']},
+  {name:'结构与支撑设计',tags:['Underwire Bra 钢圈型胸罩','Bralette 无钢圈法式胸罩','Shelf Bra / Open Cup Bra 托举式/开杯胸罩','Longline Bra 加长式胸罩（延伸至腰部）','Bullet Bra 子弹型尖杯胸罩（50年代复古）','Front Closure Bra 正面扣合胸罩']},
+  {name:'肩带与背部设计',tags:['Strapless Bra 无肩带胸罩','Racerback Bra T字型后背胸罩','Convertible Bra 肩带可变形胸罩（多种背带组合）','Backless Bra 露背胸罩（低背专用）','Adhesive Bra / Nude Bra 粘贴式/隐形胸罩','Posture Bra 改善驼背功能胸罩']},
+  {name:'功能/场合专用',tags:['Sports Bra / Athletic Bra 运动胸罩','Maternity Bra 孕产妇胸罩','Sleep Bra 睡眠用舒适型胸罩','Training Bra 少女入门胸罩','Tube Bra / Bandeau 抹胸无肩带款','Triangle Bra 三角形胸罩','Sheer Bra 薄纱透视胸罩','Peephole Bra 中央开口露乳胸罩']}
+]},
+{id:'panties',name:'女性内裤与吊袜',subs:[
+  {name:'经典款式',tags:['Classic Briefs 经典三角内裤','High-cut Briefs 高裤脚三角裤','Hipsters 中低腰三角裤','Control Briefs 塑身型三角裤','French Knickers 法式宽松短内裤']},
+  {name:'低腰/比基尼款',tags:['Bikinis 比基尼低腰三角裤','String Bikinis 缚带式比基尼内裤','Boyleg Briefs / Boyshorts 女装平角裤','Tanga 低腰丁字内裤（覆盖较多）']},
+  {name:'丁字/极简款',tags:['G-string G带内裤（极细丁字）','Thong / T-back 丁字裤','Cheeky Thongs 露半臀丁字裤','Tangas 微丁字裤','V-string V型细带内裤','C-string C型无带内裤']},
+  {name:'连体/功能款',tags:['Bodysuit 连体紧身衣','Garter Briefs 一体式吊袜带内裤']},
+  {name:'吊袜与腰封',tags:['Suspender Belt / Garter Belt 吊袜带腰封','High-waisted Garter Skirt 高腰吊袜裙','Garter 袜带（单件）']}
+]},
+{id:'mens_underpants',name:'男性内裤',subs:[
+  {name:'短裤式',tags:['Boxer Shorts 平角短裤式内裤（宽松）','Trunks 现代平角内裤（较短）','Boxer Briefs 紧身平角内裤（Calvin Klein 1990年推出）']},
+  {name:'三角式',tags:['Classic Briefs 经典男士三角内裤','Y-front Briefs Y形前档三角裤','Narrow Front Briefs 前窄式三角裤']},
+  {name:'丁字/极简款',tags:['Tanga 低腰丁字款','Thong 超细丁字裤','Unilateral Thong 单边不对称内裤']},
+  {name:'功能款',tags:['Jock Strap 护身三角绷带（运动专用）','Long Johns 秋裤/保暖内裤']}
+]},
+{id:'corsetry',name:'紧身衣与束身衣',subs:[
+  {name:'经典紧身衣',tags:['Hourglass Corset 沙漏型紧身胸衣','Bustier 束胸紧身胸衣（无背带）','Torsolette / Basque 无吊带短身紧身胸衣','Corselet / Corselette 全身束腹胸衣（连下裆）','Merry Widow 法式细腰束衣（含吊袜）']},
+  {name:'束腰与腰封',tags:['Waist Cincher 束腰带（短款，仅束腰）','Pointed Cincher 尖角装饰束腰带','Open Bottom Girdle 开裆束腹','Panty Girdle 束腹裤']},
+  {name:'内衬与组合款',tags:['Chemise 宽松无腰衬裙','Slip Dress 贴身内衬连衣裙','Teddy 连体式睡衣（上衣+短裤一体）','Teddiette 连体吊袜带内衣','Bra Slip 胸罩吊带内衬裙']}
+]},
+/* ── 旧ID保留（兼容旧选择器调用）── */
+{id:'underwear',name:'贴身内衣总览',subs:[
+  {name:'睡衣 → 详见「睡衣与晚间服」',tags:['Slip Dress 吊带睡衣裙','Nightgown 女装长睡袍','Babydoll 娃娃裙睡衣','Negligee 女装轻薄睡衣','Nightshirt 睡衣长衫','Pajama Set 睡衣套装','Camisole Pajama Set 吊带睡衣套装','Dressing Gown / Bathrobe 浴衣','Onesie 连身衣','Kimono Nightwear 和服型睡衣','Chemise 女吊带衬睡裙']},
+  {name:'胸罩 → 详见「胸罩款式」',tags:['Balconette 小阳台式','Demi Cup Bra 半杯','Full Cup Bra 全杯','Full Support Bra 全包袱','Soft Cup Bra 软杯','Plunge Bra 深露式','Push-up Bra 上托','Contour Bra 塑型','Underwire Bra 钢圈型','Bralette 法式无钢圈','Sports Bra 运动胸罩','Strapless Bra 无肩带','Tube Bra 抹胸','Backless Bra 露背','Adhesive Bra 粘贴隐形','Maternity Bra 孕妇胸罩','Sleep Bra 睡眠型','Training Bra 少女型']},
+  {name:'女性内裤 → 详见「女性内裤」',tags:['Classic Briefs 经典三角','High-cut Briefs 高脚三角','Hipsters 中低腰','Boyshorts 女装平角','Bikinis 比基尼','G-string G带','Thong 丁字裤','Control Briefs 塑身型','French Knickers 法式短内裤','Garter Briefs 吊袜带内裤','Bodysuit 连体衣','Suspender Belt 吊袜腰封']},
+  {name:'男性内裤 → 详见「男性内裤」',tags:['Boxer Shorts 平角短裤','Trunks 现代平角','Boxer Briefs 紧身平角','Classic Briefs 男三角','Y-front Briefs Y形三角','Tanga 低腰丁字','Thong 超细丁字','Jock Strap 护身绷带','Long Johns 秋裤']},
+  {name:'紧身衣 → 详见「紧身衣与束身衣」',tags:['Hourglass Corset 沙漏型','Bustier 束胸紧身衣','Corselet 全身束衣','Waist Cincher 束腰带','Panty Girdle 束腹裤','Slip Dress 贴身内衬裙','Teddy 连体睡衣','Bra Slip 胸罩衬裙']}
+]},
+{id:'silhouette',name:'廓形与线条',subs:[
+  {name:'基础廓形',tags:['A字形A-Line','H形直筒矩形','I形铅笔形Column','V形倒三角','X形沙漏收腰放摆','Y形宽肩窄下摆','O形茧型气球型','T形宽肩直落','S曲线鱼尾修身','梯形宽下窄上','不对称轮廓Asymmetric','曲线廓形Curved Line']},
+  {name:'经典廓形',tags:['帝国线Empire Line','公主线Princess Line','芭蕾舞Ballerina','晚会礼服Ballgown','气球Balloon','钟形Bell','茧型Cocoon','沙漏Hourglass','美人鱼Mermaid','蹒跚裙Hobble','巴斯尔弯曲Bustle/S-bend','喇叭型Trumpet','上紧下宽Fit and Flare/Skater','鞘形Sheath','陀螺型Peg-top','宽肩式Spindle','分层式Tiered','帐篷式Trapeze/Tent']},
+  {name:'造型设计',tags:['修身贴体Fitted','宽松Oversized','层叠堆叠','结构挺括','垂坠流线','立体剪裁','解构主义','夸张肩部','透视薄纱分层','露肩Off-shoulder','上宽下紧Flare and Tight','上宽下直Flare and Tube']}
+]},
+{id:'jacket',name:'夹克款式',subs:[
+  {name:'正装/礼服夹克',tags:['量身定制西装夹克Tailored','休闲西装夹克Blazer','单排扣西装夹克','双排扣西装夹克','晚宴西装夹克Tuxedo','白领结燕尾服White Tie','吸烟装夹克Smoking Jacket','博莱罗夹克Bolero','军官晚礼夹克Mess Jacket','伊顿夹克Eton Jacket']},
+  {name:'传统/制服夹克',tags:['斯宾塞夹克Spencer','诺福克夹克Norfolk','海员夹克Monkey','猎装夹克Hunting','爱德华式夹克Edwardian','马术夹克Show/Equestrian','猎装夹克Safari','斗牛士外套Matador/Torero','鼓手队夹克Majorette','毛式夹克中山装Mao','尼赫鲁夹克Nehru','游牧夹克Tyrolean']},
+  {name:'飞行/机车/户外夹克',tags:['机车夹克Biker','飞行员夹克Bomber','MA-1飞行夹克','M-65野战夹克','N-2B飞行夹克','N-3B飞行派克大衣','ALS/92野战夹克衬里']},
+  {name:'休闲/时尚夹克',tags:['衬衫夹克Shirt Jacket','哈灵顿夹克Harrington','牛仔夹克Denim','伐木工衬衫夹克Lumber','字母夹克Varsity/Baseball','冲锋衣防风夹克Windbreaker','连帽拉链夹克Hoodie','羽绒服Down Jacket','无袖夹克','收腰荷叶边夹克Peplum','束腰带夹克Belted','束腰款短夹克Blouson','宽松夹克Roomy','露腰短夹克Cropped','西部牛仔流苏外套Western','茧型夹克Cocoon','加大夹克Oversized']}
+]},
+{id:'coat',name:'大衣与外套',subs:[
+  {name:'经典正装大衣',tags:['切斯特菲尔德Chesterfield','晨礼服Morning Coat','英式厚呢大衣British Warm','福乐克男大衣Frock Coat','卫兵大衣Guards Coat','双排扣骑装大衣Redingote','女士歌剧大衣Opera Coat']},
+  {name:'军旅/风雨大衣',tags:['风衣战壕大衣Trench Coat','全版战壕大衣Full Trench','麦金托什雨衣Mackintosh','油布雨衣Slicker/Sou\'wester','巴尔马肯Balmacaan','除尘大衣Duster','水手大衣Reefer','派克大衣Parka']},
+  {name:'休闲/特定功能大衣',tags:['海军大衣Pea Coat','马球大衣Polo Coat','阿尔斯特大衣Ulster','阿尔斯特轻大衣Ulsterette','牛角大衣Duffle','汽车大衣Car Coat','荷叶边裙摆大衣Skating Coat','泰迪熊大衣Teddy Bear','皮草大衣Fur Coat','哥萨克大衣Cossack']},
+  {name:'披风/斗篷大衣',tags:['因弗内斯大衣Inverness','斗篷大衣Cape/Mantle Coat','披风Cloak','庞乔斗篷Poncho']},
+  {name:'廓形/剪裁大衣',tags:['束腰带大衣Belted','裹襟式大衣Wrap','茧型大衣Cocoon','公主线大衣Princess Line','帐篷大衣Tent','直筒形大衣Straight','无钮大衣Clutch','金属搭扣大衣Clasp']},
+  {name:'大衣长度',tags:['臀部长度Hip Length','至指尖长度Fingertip Length','大腿长度Thigh Length','膝上Above-the-knee','膝盖长度Knee Length','膝下Below-the-knee','小腿中部Midi Length','脚踝Maxi/Ankle Length','及地Floor Length']}
+]},
+{id:'shirt',name:'衬衫与针织衫',subs:[
+  {name:'梭织男衬衫',tags:['纽扣领衬衫Button-down','礼服衬衫Dress Shirt','燕尾服衬衫Tuxedo Shirt','教士衬衫Cleric','阿斯科特衬衫Ascot','套衫衬衫Pullover','开领衬衫Open Collar','贴身衬衫Fitted','军用衬衫Military','西部牛仔衬衫Western','野营衬衫Camp','工作衬衫Work','古巴衬衫Guayabera','拉链衬衫Zip Front','牧师衬衫Clergy','烘焙师衬衫Baker\'s','骑兵衬衫Cavalry','狩猎衬衫Safari','海军水手衬衫Middy','飞行员衬衫Pilot','保龄球衬衫Bowling','棒球衬衫Baseball','克塔衬衫Kurta','尼赫鲁衬衫Nehru','梯形衬衫Trapeze','抽绳衬衫Drawstring','裹身衬衫Wrap Shirt','束腰款衬衫Tie Waist']},
+  {name:'针织衫/T恤',tags:['T恤T-Shirt','棒球连肩T恤Raglan','美式足球T恤','橄榄球衬衫Rugby','马球衬衫Polo','拉链马球Zip Polo','假两件T恤Double','运动衫Sweatshirt','亨利衬衫Henley','露腰短T恤Cropped','单肩露肩T恤One-shoulder','海魂衫Breton/Basque','垂褶T恤Draped','束腰长身T恤Tunic','束腰长身马球Tunic Polo']}
+]},
+{id:'blouse',name:'女装衬衫与上衣',subs:[
+  {name:'基础/经典女衬衫',tags:['简单女衬衫Basic Blouse','燕尾服式女衬衫Tuxedo Blouse','农民女衬衫Peasant','套头女衬衫Pullover','斜叠襟女衬衫Surplice','夹克女衬衫Blouson','巴尔干宽松女衬衫Balkan','缩褶女衬衫Smock','女士长罩衫Over Blouse','束腰长女衬衫Tunic Blouse']},
+  {name:'结构/系带女衬衫',tags:['蝴蝶结女衬衫Bow/Tie Neck','下摆打结女衬衫Tie Waist','短身饰腰带女衬衫Sash','抽绳女衬衫Drawstring','收腰荷叶边女衬衫Peplum','束腰带女衬衫Belted']},
+  {name:'复古/民族/戏剧风女衬衫',tags:['平肩女衬衫Off-the-shoulder/Bardot','诗人女衬衫Poet','露腹女衬衫Midriff','宫廷复古女衬衫Jabot','中式马褂女衬衫Mandarin','维多利亚女衬衫Victorian','草原女衬衫Prairie','吉布森女衬衫Gibson','高乔牧人女衬衫Gaucho','海盗女衬衫Pirate','哥萨克女衬衫Cossack']},
+  {name:'其他上衣',tags:['汗背心Tank Top','芭蕾裹身上衣Ballet/Wrap Top','挂脖上衣Halterneck','贝壳衫Shell Top','贴身吊带背心Camisole','平肩上衣Off-the-shoulder Top','露肩上衣Cold-shoulder','单肩上衣One-shoulder','露腹短上衣Cropped/Midriff Top','胸罩上衣Bra Top','无带弹力胸衣Tube Top','抹胸上衣Bandeau Top']}
+]},
+{id:'dress',name:'连衣裙',subs:[
+  {name:'款式类型',tags:['衬裙Shift/Chemise','A字型A-line','梯形/帐篷Trapeze/Tent','袋式直筒Sack','束腰Tunic Dress','直筒Column Dress','鞘形紧身Sheath','超紧身Bodycon','公主线式Princess Line','低腰Dropped Waist','宽摆溜冰Skater/Flared','收腰荷叶边Peplum','吊肩Strap','轻薄贴身Slip','抹胸/无肩Tube/Strapless','挂脖Halterneck','露肩/芭铎Off-the-shoulder/Bardot','露背Backless','单肩One-shoulder','太阳裙Sundress']},
+  {name:'廓形特征',tags:['层褶Tiered','圆裙Circular','手帕下摆Handkerchief Hem','泡泡裙Bubble','缩褶Smock','百褶Pleated','郁金香Tulip','花瓣Petal','喇叭形Trumpet','美人鱼装Mermaid','巴斯尔式Bustle','拼接沙漏Panel/Hourglass']},
+  {name:'风格/制服/民俗',tags:['围裙连衣裙Pinafore/Apron','娃娃装Babydoll','紧身胸衣连身裙Corset Dress','胸衣连衣裙Bustier Dress','衬衫款Shirt Dress','狩猎款Safari Dress','围兜款Bib Dress','大衣连衣裙Coat Dress','披肩连衣裙Cape Dress','无袖制服裙Gymslip','农妇式Peasant','水手服Sailor Dress','土耳其长袍Kaftan','吉普赛Gypsy Dress','旗袍Qipao/Cheongsam','50年代家居服House Dress']},
+  {name:'历史/礼服/舞台',tags:['芭蕾舞短裙Tutu','晚会礼服Ball Gown','帝政风Regency Dress','爱德华时代Edwardian Dress','帝国线式Empire Line Dress']},
+  {name:'针织连衣裙',tags:['T恤连衣裙T-shirt Dress','背心连衣裙Tank Dress','拉链连衣裙Zip-up','裹身连衣裙Wrapover','绷带紧身Bandage Dress','毛衣连衣裙Sweater Dress']},
+  {name:'裙长',tags:['迷你Mini','膝上Above-the-knee','膝盖Knee Length','膝下Below-the-knee','小腿中部Midi','脚踝Maxi/Ankle','及地Floor Length']},
+  {name:'腰线类型',tags:['自然腰线Natural','帝国线Empire','低腰线Dropped','巴斯克腰线Basque','高腰High Waist']}
+]},
+{id:'dress_type',name:'连衣裙款式类型',subs:[
+  {name:'基础廓形款式',tags:['衬裙Shift/Chemise','A字型A-line','梯形/帐篷Trapeze/Tent','袋式直筒Sack','束腰Tunic Dress','直筒Column Dress','鞘形紧身Sheath','超紧身Bodycon','公主线式Princess Line','低腰Dropped Waist','宽摆溜冰Skater/Flared','收腰荷叶边Peplum']},
+  {name:'领/肩/背结构款式',tags:['吊肩Strap','轻薄贴身Slip','抹胸/无肩Tube/Strapless','挂脖Halterneck','露肩/芭铎Off-the-shoulder/Bardot','露背Backless','单肩One-shoulder','太阳裙Sundress']},
+  {name:'风格/制服/民俗',tags:['围裙连衣裙Pinafore/Apron','娃娃装Babydoll','紧身胸衣连身裙Corset Dress','胸衣连衣裙Bustier Dress','衬衫款Shirt Dress','狩猎款Safari Dress','围兜款Bib Dress','大衣连衣裙Coat Dress','披肩连衣裙Cape Dress','无袖制服裙Gymslip','农妇式Peasant','水手服Sailor Dress','土耳其长袍Kaftan','吉普赛Gypsy Dress','旗袍Qipao/Cheongsam','50年代家居服House Dress']},
+  {name:'历史/礼服/舞台',tags:['芭蕾舞短裙Tutu','晚会礼服Ball Gown','帝政风Regency Dress','爱德华时代Edwardian Dress','帝国线式Empire Line Dress']},
+  {name:'针织连衣裙',tags:['T恤连衣裙T-shirt Dress','背心连衣裙Tank Dress','拉链连衣裙Zip-up','裹身连衣裙Wrapover','绷带紧身Bandage Dress','毛衣连衣裙Sweater Dress']}
+]},
+{id:'dress_silhouette',name:'连衣裙廓形特征',subs:[
+  {name:'摆部造型',tags:['层褶Tiered','圆裙Circular','手帕下摆Handkerchief Hem','泡泡裙Bubble','百褶Pleated','郁金香Tulip','花瓣Petal','喇叭形Trumpet']},
+  {name:'整体轮廓',tags:['美人鱼装Mermaid','巴斯尔式Bustle','拼接沙漏Panel/Hourglass','缩褶Smock','修身贴体Fitted','宽松Oversized','垂坠流线Draped']}
+]},
+{id:'dress_length',name:'连衣裙裙长',subs:[
+  {name:'裙长',tags:['迷你Mini','膝上Above-the-knee','膝盖Knee Length','膝下Below-the-knee','小腿中部Midi','脚踝Maxi/Ankle','及地Floor Length']}
+]},
+{id:'dress_waist',name:'连衣裙腰线类型',subs:[
+  {name:'腰线位置',tags:['自然腰线Natural','高腰High Waist','低腰线Dropped','帝国线Empire（胸下高腰）','巴斯克腰线Basque（双层腰线）']}
+]},
+{id:'pants',name:'裤子与牛仔裤',subs:[
+  {name:'短裤与半休闲裤',tags:['超短热裤Micro/Hot Pants','灯笼裤Bloomers','蕾丝睡裤Tap Pants','短裤Shorts','百慕大短裤Bermuda Shorts','冲浪短裤Boardshorts','工装短裤Cargo Shorts','预科生短裤Preppy Shorts','宽松百慕大Baggy Bermudas']},
+  {name:'七分/过膝/历史风尚裤',tags:['卡布里七分裤Capri Pants','过膝女裤Pedal Pusher','半长马裤Riding Breeches','高尔夫灯笼裤Plus Fours','伊斯兰灯笼裤Sarouel Pants','裙裤Gaucho Pants']},
+  {name:'西装/定制/经典长裤',tags:['直筒裤Straight Pants','修身裤Slim-fit/Drainpipe','喇叭裤Bell-bottom','定制西装裤Tailored','燕尾服裤Tuxedo Pants','无前褶裤Flat Front','斜纹裤Chinos','牛仔裤Jeans','牛津裤Oxford Bags','细长香烟裤Cigarette Pants']},
+  {name:'阔腿/特色结构裤',tags:['西部牛仔裤Chaps','祖阿芙步兵裤Zouave','哈伦裤Harem Pants','阔腿裤Palazzo','育克裤Yoked Pants','高腰裤High-waisted','宽松裤Baggy Pants','锥形宽松裤Tapered Baggy','荷叶腰褶裤Peplum Pants','水手裤Sailor Pants']},
+  {name:'功能/工装/特殊裤',tags:['工装裤Cargo Pants','多功能可变裤Zip-off Convertible','降落伞裤Parachute Pants','睡裤Pajama Pants','肯塔基马裤Kentucky Jodhpurs','经典马裤Classic Jodhpurs','乡村猎装裤Bush Pants','木匠裤Carpenter Pants','吊带裤Suspender Pants','背带工装裤Dungarees/Overalls','短版背带裤Short Dungarees','滑雪裤Ski Pants','反光裤Phat Pants','束缚式裤Bondage Pants']},
+  {name:'牛仔裤款式',tags:['直筒牛仔裤Straight Jeans','紧身牛仔裤Skinny Jeans','锥形牛仔裤Tapered Jeans','宽松牛仔裤Baggy Jeans','宽腿牛仔裤Wide Leg Jeans','喇叭牛仔裤Flared Jeans','工装牛仔裤Cargo Jeans','钮扣门襟牛仔裤Button Fly','破洞风格牛仔裤Ripped Jeans','仿牛仔针织裤Jeggings']},
+  {name:'牛仔上衣与外套',tags:['标准牛仔夹克Standard Denim Jacket','暴风骑士外套Stormrider Jacket','羊绒内衬牛仔夹克Sherpa-lined','短牛仔夹克Cropped Denim Jacket','牛仔衬衫Denim Shirt','牛仔紧身胸衣Denim Bustier','牛仔束腹Denim Corset']},
+  {name:'牛仔下装与连身款',tags:['牛仔半身裙Denim Skirt','牛仔短裤Denim Shorts','牛仔连身工装裤Denim Dungarees','牛仔连衣裤Denim Jumpsuit/Overalls']},
+  {name:'针织裤',tags:['针织紧身裤Leggings','踩脚紧身裤Stirrup Pants','运动裤Sweatpants','瑜伽裤Yoga Pants','自行车裤Cycling Pants']},
+  {name:'裤子廓形',tags:['直筒Straight','修身Slim Fit','宽松Baggy','陀螺形Peg Top（上宽下窄）','套靴型Boot Cut','喇叭型Bell Bottom','喇叭宽摆Flare','宽腿Wide Leg']},
+  {name:'腰部位置',tags:['高腰High-waisted','正腰Normal Waist/High Rise','低腰Low-waisted/Low Rise']},
+  {name:'裤长',tags:['超迷你/热裤Micro Length','大腿中部Mid-thigh','膝上Above-the-knee/Bermuda','及膝Below-the-knee/Pedal Pusher','过膝/七分Mid-calf/Capri','至踝/九分Ankle/Cropped','全长Full Length']}
+]},
+{id:'pants_type',name:'裤装款式',subs:[
+  {name:'短裤与半休闲裤',tags:['超短热裤Micro/Hot Pants','灯笼裤Bloomers','蕾丝睡裤Tap Pants','短裤Shorts','百慕大短裤Bermuda Shorts','冲浪短裤Boardshorts','工装短裤Cargo Shorts','预科生短裤Preppy Shorts','宽松百慕大Baggy Bermudas']},
+  {name:'七分/过膝裤',tags:['卡布里七分裤Capri Pants','过膝女裤Pedal Pusher','半长马裤Riding Breeches','高尔夫灯笼裤Plus Fours','伊斯兰灯笼裤Sarouel Pants','裙裤Gaucho Pants']},
+  {name:'西装/定制/经典长裤',tags:['直筒裤Straight Pants','修身裤Slim-fit/Drainpipe','喇叭裤Bell-bottom','定制西装裤Tailored','燕尾服裤Tuxedo Pants','无前褶裤Flat Front','斜纹裤Chinos','牛仔裤Jeans','牛津裤Oxford Bags','细长香烟裤Cigarette Pants']},
+  {name:'阔腿/特色结构裤',tags:['西部牛仔裤Chaps','祖阿芙步兵裤Zouave','哈伦裤Harem Pants','阔腿裤Palazzo','高腰裤High-waisted','宽松裤Baggy Pants','锥形宽松裤Tapered Baggy','荷叶腰褶裤Peplum Pants','水手裤Sailor Pants']},
+  {name:'功能/工装裤',tags:['工装裤Cargo Pants','降落伞裤Parachute Pants','睡裤Pajama Pants','经典马裤Classic Jodhpurs','木匠裤Carpenter Pants','吊带裤Suspender Pants','背带工装裤Dungarees/Overalls','滑雪裤Ski Pants','束缚式裤Bondage Pants']},
+  {name:'针织裤',tags:['针织紧身裤Leggings','踩脚紧身裤Stirrup Pants','运动裤Sweatpants','瑜伽裤Yoga Pants','自行车裤Cycling Pants']}
+]},
+{id:'pants_denim',name:'牛仔款式',subs:[
+  {name:'牛仔裤款式',tags:['直筒牛仔裤Straight Jeans','紧身牛仔裤Skinny Jeans','锥形牛仔裤Tapered Jeans','宽松牛仔裤Baggy Jeans','宽腿牛仔裤Wide Leg Jeans','喇叭牛仔裤Flared Jeans','工装牛仔裤Cargo Jeans','钮扣门襟牛仔裤Button Fly','破洞风格牛仔裤Ripped Jeans','仿牛仔针织裤Jeggings']},
+  {name:'牛仔上衣与外套',tags:['标准牛仔夹克Standard Denim Jacket','暴风骑士外套Stormrider Jacket','羊绒内衬牛仔夹克Sherpa-lined','短牛仔夹克Cropped Denim Jacket','牛仔衬衫Denim Shirt','牛仔紧身胸衣Denim Bustier','牛仔束腹Denim Corset']},
+  {name:'牛仔下装与连身款',tags:['牛仔半身裙Denim Skirt','牛仔短裤Denim Shorts','牛仔连身工装裤Denim Dungarees','牛仔连衣裤Denim Jumpsuit/Overalls']}
+]},
+{id:'pants_silhouette',name:'裤子廓形与裤长',subs:[
+  {name:'裤子廓形',tags:['直筒Straight','修身Slim Fit','宽松Baggy','陀螺形Peg Top（上宽下窄）','套靴型Boot Cut','喇叭型Bell Bottom','喇叭宽摆Flare','宽腿Wide Leg']},
+  {name:'腰部位置',tags:['高腰High-waisted','正腰Normal Waist','低腰Low-waisted']},
+  {name:'裤长',tags:['超迷你/热裤Micro','大腿中部/短裤Shorts','膝上/百慕大Above-knee','及膝/五分Below-knee','过膝/七分Capri Midi','至踝/九分Cropped','全长Full Length']}
+]},
+{id:'skirt',name:'半身裙',subs:[
+  {name:'基础短裙与特定材质',tags:['超短半身裙Micro Skirt','迷你裙Mini Skirt','皮裙Leather Skirt','牛仔裙Denim Skirt','气球裙Balloon Skirt','裙裤型短裙Culotte Short','裙裤Skort','啦啦队半身裙Rah-rah Skirt']},
+  {name:'紧身/铅笔/修身',tags:['直身半身裙Sheath Skirt','紧身铅笔裙Pencil/Tapered Skirt','陀螺裙Peg-top Skirt','蹒跚半身裙Hobble/Wiggle Skirt']},
+  {name:'阔摆/圆裙/舞台',tags:['A字半身裙A-line','半身圆裙Circular Skirt','宽摆/溜冰裙Flared/Skater','全圆半身裙Full Skirt','芭蕾舞短裙Tutu Skirt','蓬蓬裙Ballerina Skirt','弗拉门戈半身裙Flamenco Skirt']},
+  {name:'腰部结构/门襟/功能',tags:['高腰半身裙High-waisted','育克半身裙Yoke Skirt','工装半身裙Cargo Skirt','钮扣前襟裙Button-down','围裙半身裙Apron Skirt','裹身半身裙Wrap Skirt','开衩半身裙Slit Skirt']},
+  {name:'褶裥/结构美学/特殊下摆',tags:['荷叶腰褶裙Peplum Skirt','吊钟半身裙Bell Skirt','垂褶半身裙Draped Skirt','荷叶边半身裙Ruffle Skirt','手帕半身裙Handkerchief Skirt','百褶裙Sunray Pleat Skirt','内工字褶裙Kick Pleat/Inverted Pleat','刀褶半身裙Knife Pleat','高低半身裙Hi-Lo Skirt','蛋糕半身裙Tiered Skirt','不对称半身裙Asymmetric Skirt','八幅半身裙Eight-gore Skirt','喇叭形半身裙Trumpet Skirt','鱼尾半身裙Mermaid/Fishtail Skirt','斜裁裙Bias Cut Skirt']},
+  {name:'历史/民族/特定风尚',tags:['纱笼裙Sarong/Pareo Skirt','巴伐利亚半身裙Dirndl Skirt','迷你裙撑Mini Crinoline','苏格兰短裙Kilt','草原喇叭裙Prairie Skirt','吉普赛半身裙Gypsy Skirt','罩裙Over Skirt','巴斯尔裙Bustle Skirt','中长半身裙Midi Skirt','超长半身裙Maxi Skirt','50年代贵宾犬裙Poodle Skirt','草裙Grass/Hula Skirt','衬裙Petticoat Skirt']}
+]},
+{id:'skirt_type',name:'半身裙款式',subs:[
+  {name:'基础短裙与特定材质',tags:['超短半身裙Micro Skirt','迷你裙Mini Skirt','皮裙Leather Skirt','牛仔裙Denim Skirt','气球裙Balloon Skirt','裙裤型短裙Culotte Short','裙裤Skort','啦啦队半身裙Rah-rah Skirt']},
+  {name:'紧身/铅笔/修身',tags:['直身半身裙Sheath Skirt','紧身铅笔裙Pencil/Tapered Skirt','陀螺裙Peg-top Skirt','蹒跚半身裙Hobble/Wiggle Skirt']},
+  {name:'阔摆/圆裙/舞台',tags:['A字半身裙A-line','半身圆裙Circular Skirt','宽摆/溜冰裙Flared/Skater','全圆半身裙Full Skirt','芭蕾舞短裙Tutu Skirt','蓬蓬裙Ballerina Skirt','弗拉门戈半身裙Flamenco Skirt']},
+  {name:'腰部结构/门襟/功能',tags:['高腰半身裙High-waisted','育克半身裙Yoke Skirt','工装半身裙Cargo Skirt','钮扣前襟裙Button-down','围裙半身裙Apron Skirt','裹身半身裙Wrap Skirt','开衩半身裙Slit Skirt']},
+  {name:'褶裥/结构美学/特殊下摆',tags:['荷叶腰褶裙Peplum Skirt','吊钟半身裙Bell Skirt','垂褶半身裙Draped Skirt','荷叶边半身裙Ruffle Skirt','手帕半身裙Handkerchief Skirt','百褶裙Sunray Pleat Skirt','内工字褶裙Kick Pleat/Inverted Pleat','刀褶半身裙Knife Pleat','高低半身裙Hi-Lo Skirt','蛋糕半身裙Tiered Skirt','不对称半身裙Asymmetric Skirt','八幅半身裙Eight-gore Skirt','喇叭形半身裙Trumpet Skirt','鱼尾半身裙Mermaid/Fishtail Skirt','斜裁裙Bias Cut Skirt']},
+  {name:'历史/民族/特定风尚',tags:['纱笼裙Sarong/Pareo Skirt','巴伐利亚半身裙Dirndl Skirt','迷你裙撑Mini Crinoline','苏格兰短裙Kilt','草原喇叭裙Prairie Skirt','吉普赛半身裙Gypsy Skirt','罩裙Over Skirt','巴斯尔裙Bustle Skirt','中长半身裙Midi Skirt','超长半身裙Maxi Skirt','50年代贵宾犬裙Poodle Skirt','草裙Grass/Hula Skirt','衬裙Petticoat Skirt']}
+]},
+{id:'skirt_length',name:'裙长',subs:[
+  {name:'裙长',tags:['超迷你Micro Length','迷你Mini Length','膝上Above-the-knee','及膝Knee Length','膝下Below-the-knee','小腿中部Midi Length','脚踝Maxi/Ankle Length','及地Floor Length']}
+]},
+{id:'jumpsuit',name:'连衣裤与连体服',subs:[
+  {name:'实用工装与军旅功能款',tags:['工装连衣裤Workers Jumpsuit','飞行员连衣裤Aviator Jumpsuit','二战连体工作服Siren Suit','连体工作服Boilersuit/Coveralls','牛仔工人裤Dungarees/Overalls']},
+  {name:'日常休闲与时尚款',tags:['吊带连衣裤Camisole Jumpsuit','连衣裙裤Culotte Jumpsuit','连帽连衣裤Onesie','女装短连衣裤Playsuit/Rompers']},
+  {name:'运动与紧身功能款',tags:['滑雪连体服Ski Jumpsuit','紧身连体衣Catsuit']}
+]},
+{id:'vest_sweater',name:'背心·毛衣·开衫',subs:[
+  {name:'正装/西装马甲',tags:['钮扣马甲Button Front Vest','双排扣马甲Double-breasted Vest','翻领马甲Lapelled Vest','西装马甲Waistcoat','挂颈无背马甲Halter/Piqué Vest']},
+  {name:'休闲/针织/户外背心',tags:['短马甲Short Vest','长马甲Long Vest','羽绒背心Down/Puffer Vest','开襟背心Cardigan Vest','套头毛衣背心Pullover/Sweater Vest','网球背心Tennis Vest','连帽背心Hooded Vest','狩猎背心Safari Vest']},
+  {name:'风格/塑身背心',tags:['朋克背心Punk Vest','西部牛仔背心Western Vest','嬉皮背心Hippie Vest','托胸紧身马甲Corset Gilet','绑带马甲胸衣Bodice Vest']},
+  {name:'基础领型与廓形毛衣',tags:['圆领毛衣Crew Neck Sweater','大圆领毛衣Round Neck Sweater','V领毛衣V-neck Sweater','亨利领毛衣Henley Neck Sweater（半开襟）','束腰毛衣Waisted Sweater','短毛衣Cropped Sweater','蝙蝠袖毛衣Batwing Sleeve Sweater','连帽毛衣Hooded Sweater','无袖毛衣连手套Sleeveless with Gauntlets','束腰长毛衣Tunic Sweater','马球毛衣Polo Sweater','拉链式毛衣Zip-up Sweater','高领毛衣Turtleneck Sweater','厚重毛衣Chunky Sweater','加大毛衣Oversized Sweater']},
+  {name:'传统工艺与民族地域毛衣',tags:['绳织阿兰渔夫毛衣Cable/Aran/Fisherman Sweater','根西毛衣Guernsey Sweater','费尔岛式毛衣Fair Isle Sweater（多色几何图案）','蒂罗尔毛衣Tyrolean Sweater（奥地利民族风）','挪威毛衣Lusekofte/Norwegian Sweater','冰岛传统毛衣Lopapeysa/Icelandic Sweater','加拿大雪柄厚毛衣Cowichan/Mary Maxim Sweater']},
+  {name:'经典纹理与特定风格毛衣',tags:['板球毛衣Cricket Sweater','罗纹毛衣Ribbed Sweater','阿盖尔菱型毛衣Argyle Sweater','嵌花毛衣Intarsia Sweater','绳织花纹毛衣Cable Knit Sweater','军装毛衣Army Sweater','雨披款毛衣Poncho Sweater','水手毛衣Sailor Sweater']},
+  {name:'开襟衫款式',tags:['圆领开襟衫Round Neck Cardigan','V领开襟衫V-neck Cardigan','拉链式开襟衫Zip-up Cardigan','短开襟衫Cropped Cardigan','围巾领开襟衫Shawl Collar Cardigan','裹身开襟衫Wrap Cardigan','人造皮草小坎肩Faux Fur Shrug','小坎肩/博莱罗Shrug/Bolero Cardigan','芭蕾舞开襟衫Ballet Cardigan','连帽开襟衫Hooded Cardigan','中长开襟衫Midi Cardigan','超长开襟衫Maxi Cardigan']}
+]},
+{id:'style',name:'服装风格',subs:[
+  {name:'都市/街头',tags:['街头风Streetwear','机能风Techwear','暗黑风Dark/Noir','工装风Gorpcore','运动休闲Athleisure','极简主义Minimalism','经典美式Preppy','波西米亚Boho','复古风Vintage','摇滚风Rock','朋克风Punk','赛博朋克Cyberpunk','蒸汽朋克Steampunk','Y2K复古未来']},
+  {name:'东方/传统',tags:['中国风Chinoiserie','新中式','国潮风','日系和风','韩系清新','民族风Ethnic','改良汉服风','宫廷风','武侠风','道教仙气风']},
+  {name:'欧洲/西方传统',tags:['维多利亚风','爱德华风','洛可可风','巴洛克宫廷风','哥特风','中世纪骑士风','文艺复兴风','北欧简约Scandinavian','法式优雅French Chic','英伦绅士风']},
+  {name:'自然/生活方式',tags:['田园风Cottagecore','森女风','户外风Outdoor','海洋风Coastal','度假风Resort','乡村牛仔西部风','马术风']},
+  {name:'美学/亚文化',tags:['甜美洛丽塔Sweet Lolita','哥特洛丽塔Gothic Lolita','Dark Academia','Light Academia','Regencycore','Fairycore','中性风Androgynous','多巴胺穿搭']}
+]},
+/* ── 领口 + 领子 + 翻领 ── */
+{id:'neckline',name:'领口形状',subs:[
+  {name:'基础常规领口',tags:['圆领Round','V领V-neck','U形领U-neck','椭圆形领Oval','方形领Square','船员领Crew','梯形领Trapeze','鸡心领V-shaped Crew']},
+  {name:'深/低领口',tags:['深领Plunge','汤匙领Scoop','心形领Sweetheart','马蹄铁形领Horseshoe']},
+  {name:'几何/花式领口',tags:['船领Boat/Bateau','钻石形领Diamond','锁孔形领Keyhole','扇贝形领Scalloped','花瓣形领Petal','锯齿领Zigzag','不对称领Asymmetric']},
+  {name:'高/封闭式领口',tags:['高领High/Bottle','高垂领Turtleneck','漏斗领Funnel','烟囱领']},
+  {name:'结构/特殊领口',tags:['无肩带式Strapless','露肩领Off-the-shoulder','单肩领One-shoulder','挂颈领Halterneck','吊带式领Camisole','裹身斜襟领Wrapped/Surplice','交叠领Surplice','佛罗伦萨方领Florentine']},
+  {name:'工艺装饰领口',tags:['缺口领Notched','斜线领Slashed','打褶领Gathered','垂褶领Cowl','抽绳式领Drawstring','亨利领Henley','芭蕾舞衣式领Ballerina']}
+]},
+{id:'collar',name:'领子款式',subs:[
+  {name:'男衬衫 / 商务领',tags:['正常领Regular','宽展领Spread','尖领/巴利摩尔领Pointed/Barrymore','长领尖附钮扣领Long Button-down','短领尖附钮扣领Short Button-down','扣袢式领Tab','切角领Full Cutaway','圆角领Round','斜边领Mitered','翼领/燕子领Wing','窄领Narrow','马球领Polo/Flat Knit','约翰尼小方角领Johnny']},
+  {name:'立领 / 古典 / 特定时代',tags:['皇家立领Imperial（爱德华时期）','离颈领Stand-away','立领Banded/Stand','中式马褂领Mandarin','罗马领Clerical','爱德华时代领Edwardian','宽翻领Eton','半高领Mock Neck']},
+  {name:'平翻 / 翻折领',tags:['平翻领Flat','开领Open','彼得潘领Peter Pan','饰针领Pinned','清教徒领Puritan','不对称领Asymmetric','缺口领Notched','切尔西式领Chelsea']},
+  {name:'披肩 / 装饰 / 舞台领',tags:['青果/丝瓜领Shawl','双领子Double','水手领Sailor/Middy','蝴蝶结/飘带领Pussy Bow','诗人衬衫领Poet','装饰蕾丝花边领Jabot','荷叶蕾丝花边领Medici','小丑领Pierrot','拉夫领Ruff Collar','环扣领Loop','高垂领Turtleneck','围巾领Cowl Neck','堆堆领','烟囱领/高领Funnel']}
+]},
+{id:'lapel',name:'翻领款式',subs:[
+  {name:'平驳 / 枪驳基础类',tags:['平驳翻领Notched','半平驳翻领Semi-notched','鱼嘴翻领Fish Mouth','枪驳翻领Peaked/Pointed','半枪驳翻领Semi-peaked']},
+  {name:'圆弧 / 花式翻领',tags:['上圆翻领Round Collar Peak','圆翻领Round Peak','花罗纹翻领Clover','半花罗纹翻领Half Clover']},
+  {name:'青果 / 礼服翻领',tags:['青果/丝瓜翻领Shawl','鱼嘴青果翻领Notched Shawl','扣袢翻领Tab','镶边翻领Framed']},
+  {name:'大衣 / 军装翻领',tags:['巴尔马干外套翻领Balmacaan','阿尔斯特大衣翻领Ulster','切斯特菲尔德式翻领Chesterfield','拿破仑翻领Napoleon']},
+  {name:'几何 / 特色翻领',tags:['L形翻领L-shaped','T形翻领T-shaped']}
+]},
+/* ── 袖型 + 袖口 ── */
+{id:'sleeve',name:'袖型款式',subs:[
+  {name:'基础结构类',tags:['普通装袖Set-in','连肩袖Raglan','半连肩袖Semi-raglan','落肩袖Drop Shoulder','肩章袖Epaulet','过肩袖Yoke','两片袖Two-piece Sleeve','正肩袖']},
+  {name:'蓬松 / 量感 / 宫廷风',tags:['盖肩袖Cap','郁金香形袖Tulip','打褶袖Tucked','泡泡袖Puff','垂肩式泡泡袖Dropped Puff','气球型袖Balloon','羊腿袖Gigot/Leg o\'Mutton','主教服式袖Bishop','灯笼袖Lantern','蝴蝶袖Butterfly','层叠/蛋糕袖Tiered','藕节袖Virago','朱丽叶袖Juliet']},
+  {name:'张开 / 垂坠 / 东方幻想',tags:['宽摆袖Flare','天使袖Angel','手帕袖Handkerchief','短钟形袖Short Bell','钟形/小号形袖Bell/Trumpet','喇叭袖Cornet','漏斗袖Funnel','露肩袖Cold Shoulder','缺角袖Slashed','新月形袖Crescent','传统和服袖Kimono','宝塔袖Pagoda','嵌条式袖Paned','蝙蝠袖Batwing','淑女袖Poet','开叉袖Hanging','多尔门袖Dolman']},
+  {name:'中式 / 民族袖',tags:['汉服广袖','汉服琵琶袖','汉服马蹄袖','和服袖Kimono']},
+  {name:'无袖 / 特殊构型',tags:['无袖Sleeveless','单肩袖One-shoulder','不对称袖Asymmetric']}
+]},
+{id:'cuff',name:'袖口款式',subs:[
+  {name:'基础 / 工艺袖口',tags:['平袖口Plain','反袖口Turn-up','扣袢式袖口Tab','绑式袖口Strapped','缩褶袖口Shirred','袖衩袖口Placket','罗纹袖口Ribbed','针织袖口Knit','条带状袖口Banded']},
+  {name:'多钮 / 礼服袖口',tags:['三钮扣袖口Triple Button','多钮扣袖口Long Buttoned','法式袖口French（带袖扣）','占士邦/波托菲诺袖口Portofino/James Bond']},
+  {name:'装饰 / 特色袖口',tags:['荷叶边袖口Frilled','方形袖口Square','圆角袖口Rounded','折后款袖口Folded Back','袢扣袖口Loop Closure','褶袖口Pleated','包边袖口Edge Trim','西部牛仔款袖口Western','滚边袖口Piped','流苏式袖口Fringed','可变换式袖口Convertible']}
+]},
+/* ── 开襟 + 口袋 + 结构细节 ── */
+{id:'opening',name:'开襟方式',subs:[
+  {name:'扣型 / 基础方向',tags:['单排扣Single-breasted','双排扣Double-breasted','男士开襟（钮扣在右）','女士开襟（钮扣在左）']},
+  {name:'门襟工艺',tags:['明门襟Placket','暗门襟Fly Front','缺口式开襟Slashed','钮扣式Button','不对称开襟Asymmetric','裹身开襟Wrap']},
+  {name:'系合方式',tags:['袢扣开襟Button & Loop','系带开襟Lacing','扣式开襟Buckle','盘扣开襟Chinese Button','牛角扣开襟Toggle','拉链式Zipper/Slide Fastener','链扣开襟Chained','偏襟中式']}
+]},
+{id:'pocket',name:'口袋款式',subs:[
+  {name:'贴袋类 Patch Pockets',tags:['贴袋Patch','明线贴袋Top-stitched Square','圆角贴袋Rounded','斜角贴袋Angled','罗纹贴袋Rib Top','拉链贴袋Patch with Zipper','箱形褶贴袋Box Pleated','有盖贴袋Patch with Flap','风箱/工装袋Bellows/Cargo','袋鼠袋Kangaroo Pouch','铅笔袋Pencil Pocket']},
+  {name:'唇袋 / 挖袋类 Welt & Jetted',tags:['单唇袋Welt/Besom','船形弯单唇袋Barchetta','明线单唇袋Top-stitched Welt','钮扣单唇袋Welt with Button','双唇袋Jetted','明线双唇袋Top-stitched Jetted','拉链双唇袋Jetted with Zipper','袢扣双唇袋Jetted with Tab','有盖双唇袋Jetted with Flap','西部牛仔加固双唇袋Reinforced Western']},
+  {name:'夹克常用口袋',tags:['单唇袋Welt','有盖双唇袋Jetted with Flap','斜有盖袋Slanted Flap','贴袋Patch','风箱袋Bellows','票袋Ticket Pocket','侧缝口袋Seam','西部牛仔盖袋Western Flap']},
+  {name:'裤装口袋',tags:['斜插袋Slant/Slashed','弯曲袋Curved','侧缝/直袋Seam/Vertical','1/8斜侧袋1/8 Slashed','1/4斜侧袋1/4 Slashed','1/2斜侧袋1/2 Slashed','L型袋L-shaped','平插袋Frogmouth','硬币袋Coin Pocket','拉链式硬币袋Zippered Coin','有盖表带袋Fob Pocket','矩形贴袋Rectangular Patch','盖袋式Flap','双滚边袋Jetted']}
+]},
+{id:'jacket_detail',name:'夹克 / 外套结构细节',subs:[
+  {name:'肩线款式',tags:['直肩线Straight','自然肩线Natural','垂肩线Dropped','宽版肩线Wide','方形肩线Square','翘肩Roped','宝塔肩线Concave/Pagoda','拱形肩线Arched','那不勒斯肩线Neapolitan（袖山有小皱褶）','伸展肩线Extended']},
+  {name:'背部结构',tags:['后中缝线Center Back Seam','公主线Princess Seam','袖圈公主线Armhole Princess Seam','腰褶Waist Dart','袖圈褶Armhole Dart','肩褶Shoulder Dart']},
+  {name:'前下摆造型',tags:['圆角下摆Rounded Cut','正常下摆Regular Cut','方形切线下摆Square Cut','圆切角下摆Cutaway']}
+]},
+{id:'shirt_detail',name:'衬衫剪裁细节',subs:[
+  {name:'前育克设计',tags:['水平育克Horizontal','斜育克Diagonal','西部牛仔育克Western','扇贝形育克Scalloped','倒褶育克Inverted Pleat','外加四合扣Snap Down']},
+  {name:'后育克设计',tags:['水平后育克Horizontal','两片式后育克Split','有褶式后育克Darted','垂直拼接Perpendicular Pieced','缺角Notched','重叠缺角Overlapped Notched','水平抽入Horizontal with Insert','圆角Rounded','扇贝形Scalloped','西部牛仔Western']},
+  {name:'下摆造型',tags:['直下摆Straight','衬衫下摆Shirt Hem','后摆加长Shirttail Hem','收紧下摆Banded','棒球衣款Baseball','打褶款Gathered','打结款Tie','宽下摆Flare','收腰荷叶款Peplum','前高后低款Hi-Low']}
+]},
+{id:'pants_detail',name:'裤装结构细节',subs:[
+  {name:'前腰褶设计',tags:['无褶式Flat Front','单褶式Single Pleat','双褶式Double Pleat','腰带延长式Extended Waistband','无腰带式Self-extended Waistband']},
+  {name:'侧边口袋裁切',tags:['接缝式/垂直式Seam/Vertical','1/8斜侧袋1/8 Slashed','1/4斜侧袋1/4 Slashed','1/2斜侧袋1/2 Slashed','弯曲式Curved','L型L-shaped','斜插式Frogmouth','盖袋式Flap','双滚边袋Jetted']},
+  {name:'裤耳款式',tags:['基本款裤耳Basic','双裤耳Double','V形裤耳V-shaped','X形裤耳X-shaped','宽裤耳连D扣Wide with D-Ring','皮革包边宽裤耳Leather-trimmed Wide Loop','倒梯形裤耳Inverted Trapezoid','马蹄铁形裤耳Horseshoe']}
+]},
+{id:'jeans_detail',name:'牛仔裤结构细节',subs:[
+  {name:'五袋经典结构',tags:['传统五袋款Traditional Five Pocket','含表袋Watch/Coin Pocket','无袋款No Pockets']},
+  {name:'后袋造型',tags:['传统款Traditional','木匠款Carpenter','椭圆形款Oval-shaped','有装饰款Embellished','西部牛仔盖袋款Western Flap','盖袋带钮扣款Flap with Buttons','拉链贴袋款Patch with Zipper']},
+  {name:'前袋造型',tags:['传统五袋款Traditional Five Pocket','边线车线袋Stitched Round Pocket','贴袋Patch Pocket','有装饰款Embellished Pocket','斜边贴袋款Mitered Patch Pocket']}
+]},
+/* 旧ID兼容 */
+{id:'placket',name:'门襟与口袋（旧版兼容）',subs:[
+  {name:'门襟开襟 → 详见「开襟方式」',tags:['明门襟','暗门襟Hidden Placket','单排扣','双排扣','不对称开襟','裹身开襟','系带开襟','盘扣开襟','拉链式开襟','偏襟中式']},
+  {name:'口袋 → 详见「口袋款式」',tags:['明线贴袋Patch','拉链贴袋','工装袋Cargo','袋鼠袋','单唇袋Welt','双唇袋Jetted','斜插袋']}
+]},
+{id:'waist_hem',name:'腰线与下摆',subs:[
+  {name:'腰线设计',tags:['自然腰线','帝政腰线Empire','高腰High Waist','超高腰Ultra High','低腰Low Rise','收腰Fitted','束腰带Corset','弹性腰头','绳带收腰','腰链','流苏腰带']},
+  {name:'下摆设计',tags:['平下摆Straight','圆弧下摆','不对称下摆Asymmetric','前短后长Hi-Lo','燕尾下摆','荷叶边下摆','流苏下摆','毛边Raw Hem']}
+]},
+{id:'sewing',name:'结构与缝纫工艺',subs:[
+  {name:'省道与褶裥',tags:['垂直省','胸省Bust Dart','法式省French Dart','刀褶','箱式褶Box Pleat','百褶Accordion','福膝纳褶Fortuny','打褶Gathering','伸缩绣缝Smocking']},
+  {name:'缝型工艺',tags:['平缝锁式线迹','法式缝French Seam','埋夹缝Flat-felled','密拷线迹','包边缝','明线装饰缝']},
+  {name:'拉链五金',tags:['开尾拉链','闭尾拉链','双向分离式开尾','自动锁式拉链头','金属拉链牙','隐形拉链']},
+  {name:'饰带辅料',tags:['珠饰饰带','蛇纹编织饰带','流苏饰带Fringe','皮革镶边','罗纹饰边','蕾丝滚边','羽毛饰边','金属链条饰边']}
+]},
+{id:'hat',name:'帽子与头饰',subs:[
+  {name:'正装礼帽',tags:['高顶礼帽Top Hat','圆顶硬礼帽Bowler','洪堡毡帽Homburg','费杜拉帽Fedora','特比式软毡帽Trilby','卷边平顶帽Porkpie','三角帽Tricorne','双角帽Bicorne','熊皮帽Bearskin','方顶学士帽Mortarboard']},
+  {name:'女士社交帽',tags:['钟形帽Cloche','药盒帽Pillbox','带面纱药盒帽Pillbox with Veil','布列塔尼帽Breton','阔边帽Picture Hat','车轮帽Cartwheel Hat','软帽Floppy Hat','朱丽叶帽Juliet Cap','波耐特帽Bonnet','网眼头饰Fascinator','郁金香帽Tulip Hat','灯罩帽Mushroom Hat']},
+  {name:'软帽/便帽',tags:['贝雷帽Beret','传统苏格兰贝雷帽Tam o\'Shanter','报童帽Newsboy Cap','棒球帽Baseball Cap','鸭舌帽Flat Cap','粗花呢鸭舌帽Tweed Flat Cap','赛马帽Jockey Cap','法国圆筒军帽Kepi','船形折叠便帽Side Cap']},
+  {name:'针织/保暖帽',tags:['毛线帽Beanie','无边织帽Toque','羊毛绒球帽Bobble Hat','护耳毛帽Ushanka','哥萨克毛帽Cossack Cap','雷锋帽Russian Trapper','钩针帽Crochet Hat','拉斯塔帽Rasta Hat','睡帽Nightcap']},
+  {name:'草帽/户外帽',tags:['巴拿马帽Panama','硬草帽Boater','草帽Straw Hat','渔夫帽Bucket Hat','遮阳帽Sun Visor','狩猎帽Safari Hat','牛仔帽Cowboy Hat','木髓遮阳盔Pith Helmet','斗笠Coolie Hat','墨西哥阔边帽Sombrero']},
+  {name:'军/制服帽',tags:['海员大盖帽Marine Cap','水手帽Sailor Cap','平顶军训帽Field Cap','铁路工人帽Stormy Kromer Cap','骑马头盔Riding Helmet','巫师帽Wizard Hat']},
+  {name:'民族/宗教/特殊头饰',tags:['土耳其毯帽Fez','弗里吉亚无边便帽Phrygian Cap','阿拉伯头巾Keffiyeh','包头巾Turban','蒂罗尔帽Tyrolean']}
+]},
+{id:'mask',name:'面具与遮面',subs:[
+  {name:'社交/装饰面具',tags:['多米诺半面具Domino Mask','威尼斯全脸面具Volto/Larval','科隆比纳半脸面具Colombina','骗子面具Zanni','鸟嘴瘟疫医生面具Medico Della Peste']},
+  {name:'传统/戏剧面具',tags:['日本能剧般若面具Hannya','中国戏曲脸谱Chinese Opera Mask','传统非洲面具African Mask']},
+  {name:'功能/防护面具',tags:['焊接面罩Welding Mask','滑雪面罩Ski Mask','防毒面具Gas Mask']}
+]},
+{id:'bag',name:'包袋',subs:[
+  {name:'手抓包/晚宴包',tags:['手抓包Clutch','信封包Envelope Clutch','口金手提包Kiss Lock','化妆盒晚礼包Minaudière','晚装包Evening Bag','手镯袋Bracelet Bag','麻将包Pochette','束口手袋Pompadour Bag']},
+  {name:'手提包',tags:['法棍包Baguette','马鞍包Saddle Bag','保龄球包Bowling Bag','箱形包Box Bag','医生包Doctor Bag','格莱斯顿皮箱Gladstone Bag','萨利·吉斯手提包Sally Jess Bag','波士顿提包Boston Bag','百慕大包Bermuda Bag','帽盒Hat Box']},
+  {name:'日常肩背包',tags:['托特包Tote Bag','流浪包Hobo Bag','水桶包Bucket Bag','购物包Shopping Bag','编织手提包Woven Tote']},
+  {name:'斜挎/单肩包',tags:['斜挎包Messenger Bag','斜挎胸包Sling Bag','皮带袋Belt Bag','腰包Waist Bag','机车挂包Pannier Bag','小圆包Canteen Bag']},
+  {name:'背包',tags:['双肩背包Backpack','帆布背包Rucksack','书包School Bag','抽绳包Drawstring Bag']},
+  {name:'旅行/商务包',tags:['剑桥包Satchel','公文包Briefcase','电脑包Computer Bag','公文皮夹Portfolio','公文箱Attaché Case','周末旅行袋Weekender','拉杆箱Trolley Case','手提箱Suitcase','大衣箱Trunk','机师航空箱Pilot Case']},
+  {name:'运动/功能包',tags:['圆筒包Duffle Bag','卷筒袋Roll Bag','网球包Tennis Bag','高尔夫球袋Golf Bag','相机包Camera Bag','化妆箱Cosmetic Case','午餐包Lunchbox Bag']},
+  {name:'民族/特色包',tags:['苏格兰毛皮袋Sporran','印第安药包Medicine Bag','印笼Inro','手筒毛皮包Muff Bag','嬉皮士印第安包Squaw Bag','草编沙滩包Straw Bag','编织手袋Kenya Bag','篮子Basket','风琴立体袋Accordion Bag','香奈儿经典包Chanel Bag']}
+]},
+{id:'wallet',name:'钱包与小皮件',subs:[
+  {name:'钱包类型',tags:['长钱包Continental Wallet','双折钱包Bifold Wallet','三折钱包Trifold Wallet','信用卡钱包Credit Card Wallet','零钱包Coin Purse','钞票夹Money Clip']},
+  {name:'小皮件',tags:['钥匙包Key Case','名片卡夹Business Card Holder','卡夹Card Holder','多功能皮夹本Writing Case','眼镜盒Spectacle Case']}
+]},
+{id:'shoes',name:'鞋靴',subs:[
+  {name:'正装男鞋',tags:['牛津鞋Oxford（内耳闭合式）','巴摩尔牛津鞋Balmoral Oxford','德比鞋Derby（外耳开放式）','布鲁彻尔鞋Blucher','布洛克雕花鞋Brogue','翼纹鞋Wingtip','观赛双色鞋Spectator','巴克翻毛皮鞋Buck','僧侣束带鞋Monkstrap（单/双扣）','晚宴圆头鞋Opera Pump']},
+  {name:'乐福鞋/便鞋',tags:['乐福鞋Loafer','便士乐福鞋Penny Loafer','流苏乐福鞋Tassel Loafer','便鞋Slip-on','莫卡辛鞋Moccasin','小袋鼠鞋Wallabee','帆船鞋Boat Shoe']},
+  {name:'平底女鞋',tags:['芭蕾平底鞋Ballet Flat','折叠便携芭蕾鞋Folding Ballet Flat','玛丽珍鞋Mary Jane','奥赛平底鞋d\'Orsay Flat','法国草编鞋Espadrille','穆勒鞋Mule','木底鞋Clog']},
+  {name:'高跟鞋',tags:['圆头高跟鞋Pump','尖头浅口高跟鞋Pointy Pump','玛丽珍高跟鞋Mary Jane Pump','细高跟鞋Stiletto','奥赛高跟鞋d\'Orsay Pump','无后跟带扣Slingback','T带高跟鞋T-Bar','鱼嘴高跟鞋Peep Toe','无后跟高跟穆勒Mule Heel','厚底防水台Platform','楔形坡跟鞋Wedge','牛津高跟鞋Oxford Pump','流苏翻片高跟鞋Kiltie Pump','无跟高跟鞋Heel-less']},
+  {name:'凉鞋',tags:['一字拖/室内凉鞋Slide Sandal','脚踝带凉鞋Ankle Strap Sandal','人字拖Thong/Flip-flop','斗士凉鞋Gladiator','渔夫凉鞋Fisherman Sandal','革条编织凉鞋Huarache','软木凉鞋Cork Sandal（勃肯风）','草编楔形凉鞋Espadrille Wedge']},
+  {name:'踝靴/短靴',tags:['脚踝靴Ankle Boot','切尔西靴Chelsea Boot','查卡靴Chukka Boot','沙漠靴Desert Boot','平底靴Flat Shoe Boot','多扣朋克靴Multi-buckle Boot','焦特布尔马术靴Jodhpur Boot','男士礼靴Dress Boot']},
+  {name:'中长筒靴',tags:['工作靴Work Boot','猎鸭防水靴Duck Boot','技师/工兵靴Harness Boot','澳洲工装切尔西靴Australian Boot','佩科斯农场靴Pecos Boot','伐木靴Logger Boot','懒人堆堆靴Slouch Boot','印第安串珠靴Indian Boot']},
+  {name:'高筒靴/过膝靴',tags:['骑马靴Riding Boot','牛仔靴Cowboy Boot','过膝长靴Over-the-knee Boot','橡胶雨靴Wellington Boot','甲板靴Deck Boot','油轮工人靴Tanker Boot','安全油田靴Rigger Boot','钢鞋头靴Steel-toe Boot']},
+  {name:'雪地/极寒靴',tags:['UGG雪靴UGG Boot','雪靴/月球靴Moon Boot','爱斯基摩雪靴Mukluk','登山靴Hiking Boot']},
+  {name:'运动/帆布鞋',tags:['胶底帆布鞋Plimsoll','低帮匡威Low-top Converse','高帮匡威High-top Converse','Vans一脚蹬Vans Slip-on','篮球鞋Basketball Shoe','跑步鞋Running Shoe','网球鞋Tennis Shoe','足球鞋Soccer Shoe']}
+]},
+{id:'jewelry',name:'珠宝首饰',subs:[
+  {name:'项链长度分类',tags:['贴颈式Choker（35-40cm）','公主式Princess Length（43-48cm）','马天尼式Matinee（56-58cm）','歌剧式Opera Length（71-86cm）','绳链式Rope（114cm以上）']},
+  {name:'项链款式',tags:['吊坠项链Pendant','独粒宝石项链Solitaire','相盒项链Locket Pendant','Y型项链Y-Necklace','套索式项链Lariat','流苏吊坠项链Tassel Pendant','金币项链Medallion','十字架项链Cross Pendant','宣言夸张项链Statement Necklace','隐形项链Invisible Necklace','渐层珍珠项链Graduated Necklace']},
+  {name:'项圈/多层链',tags:['硬式扭力项圈Torc Necklace','领子项链Collar','埃及领项链Egyptian Collar','奴隶多层项链Esclavage','长流苏珠链Sautoir','乞丐波西米亚珠链Beggar Beads']},
+  {name:'手链/手镯',tags:['开口硬手镯Cuff','闭合硬手镯Bangle（玉镯/金镯）','铰链手镯Hinged Bangle','网球手链Tennis Bracelet','幸运吊坠手链Charm Bracelet','链状手链Chain Bracelet','友谊编织手链Friendship Bracelet','珠子手链Bead Bracelet','皮革腕带Leather Wristband','蛇形手链Snake Bracelet','盘绕式手镯Coiled Bracelet','识别牌手镯Identity Bracelet','连指手背链Bracelet Ring','运动护腕带Sport Wristband','圣甲虫手链Scarab Bracelet','智能手环Smart Bracelet']},
+  {name:'戒指',tags:['爪镶戒指Prong Setting','包镶戒指Bezel Setting','密钉群镶Pavé','印章戒指Signet','对戒Wedding Band','鸡尾酒戒指Cocktail Ring']},
+  {name:'耳环款式',tags:['耳钉Stud Earring','圈环耳环Hoop Earring','吊式耳环Drop Earring','吊坠摇曳耳环Dangle Earring','流苏耳环Tassel Earring','链状耳夹Chain Ear Cuff','耳线Chain Ear Wire']},
+  {name:'耳环固定方式',tags:['耳钩Fish Hook','弹簧耳圈Snap Back','C圈铰链Hinged Earwire','螺丝耳夹Screw Back（无耳洞）','耳夹Clip-on（无耳洞）','法式扣环Omega Back/French Clip']},
+  {name:'宝石切割',tags:['圆形明亮式切割Round Brilliant','祖母绿切割Emerald Cut','方形公主切割Princess Cut','玫瑰切割Rose Cut','弧面形切割Cabochon','椭圆切割Oval','梨形切割Pear','心形切割Heart','马眼切割Marquise']},
+  {name:'身体穿饰/唇饰',tags:['耳垂耳钉Earlobe Stud','耳屏钉Tragus','耳轮骨钉Helix','耳洞扩大器Flesh Tunnel','肚脐钉Navel Ring','眉钉Eyebrow Barbell','鼻孔钉Nostril','鼻隔膜马蹄环Septum','下唇钉Labret','蛇咬双唇钉Snake Bites','美杜莎人中钉Medusa','梦露唇钉Monroe']},
+  {name:'穿环五金形状',tags:['直杠铃钉Straight Barbell','弯曲香蕉钉Curved Barbell','马蹄环Circular Barbell','球形闭合环Ball Closure Ring','无缝环Segment Ring','D形扣环D-Ring','插头钉Plug','乳头盾Nipple Shield']}
+]},
+{id:'socks_legwear',name:'袜子与腿部',subs:[
+  {name:'超短/隐形袜',tags:['隐形袜No-show Socks','浅口袜Foot Socks','船袜Sneaker Socks','脚踝袜Ankle Socks']},
+  {name:'中长筒袜',tags:['船员中筒袜Crew Socks','宝贝短袜Bobby Socks（40-50年代翻折棉袜）','及膝袜Knee-high Socks','泡泡袜Loose Socks（日系堆叠针织袜）']},
+  {name:'过膝/高筒袜',tags:['过膝袜Over-the-knee Socks','大腿袜Hold-ups（自锁防滑硅胶圈）','长袜连吊带Stockings & Suspenders','有缝丝袜Seamed Stockings']},
+  {name:'连裤袜/紧身袜',tags:['连裤袜Tights/Pantyhose','塑形裤袜Control Tights','渔网紧身袜Fishnet Tights','打底九分裤袜Footless Tights','露趾紧身袜Open Toe Tights','裸色隐形紧身袜Bare Invisible Tights','仿纹身紧身袜Tattoo Tights','膝下长筒丝袜Knee-high Stockings','中筒丝袜Calf-high Stockings']},
+  {name:'特殊结构袜',tags:['五趾袜Toe Socks','足袋/分趾袜Tabi（大拇指分离）','毛线袜Wool Socks','渔网袜Fishnet']},
+  {name:'腿部装饰',tags:['暖腿袜套Leg Warmer','腿环Leg Ring','踝链Anklet','束带Garter','流苏腿饰','腿甲Leg Armor']}
+]},
+{id:'scarf_neck',name:'围巾与颈部',subs:[
+  {name:'围巾/披肩类型',tags:['长围巾Muffler','方巾Square Scarf','丝巾Silk Scarf','毛线围巾Knit Scarf','披肩Shawl','高级长披肩Stole','三角围巾/头巾Neckerchief','婆婆头布Babushka','印花小头巾Bandana','无限圈围巾Infinity Scarf','貂皮整条围巾Zibellino','羽毛蓬松长围巾Boa','钩编蕾丝阿斯科特围巾Crochet Ascot']},
+  {name:'肩部覆盖',tags:['毛领Fur Collar','围肩Shoulder Wrap','短斗篷Capelet','女式带袖短披肩Shrug']},
+  {name:'颈部领饰',tags:['领巾Cravat','领结Bow Tie','普通领带Tie','俱乐部领带Club Tie','英式军团领带British Regimental','美式军团领带American Regimental','针织领带Knit Tie','阿斯科特领巾Lavallière','丝带领带Ribbon Tie','波洛领带Bolo Tie','项圈Collar','贴颈Choker','宽颈带Gorget']}
+]},
+{id:'belt',name:'腰带与腰封',subs:[
+  {name:'皮带/扣环类',tags:['普通皮革腰带Leather Belt','编织皮带Braided Leather Belt','蛇皮腰带Snake Belt','西部牛仔腰带Western Belt','子弹带Cartridge Belt','武装皮腰带Sam Browne Belt','狩猎款腰带Safari Belt','钱包腰带Money Belt','护腰带Kidney Belt']},
+  {name:'金属/链条类',tags:['链条腰带Chain Belt','圆圈腰链Ring Chain Belt','金属网状腰带Mesh Metal Belt','金属扣眼腰带Grommet Belt','金属松紧腰带Metal Stretch Belt']},
+  {name:'布带/织带类',tags:['布腰带Fabric Sash','缎带腰带Sash Belt','织带腰带Ribbon Belt','自动扣织带腰带Webbing with Cam Buckle','D形扣腰带D-Ring Belt','绑绳腰带String Belt','松紧腰带Cinch Belt']},
+  {name:'腰封/特殊腰带',tags:['束腰带Waist Cincher','皮腰封Leather Waist Band','刺绣腰封','欧比和服腰带Obi Belt','战士腰封Warrior Sash','武装腰带Utility Belt','铆钉腰带Studded Belt','腹带Cummerbund','马球腰带Pampeano Polo Belt','贝壳腰链Concha Belt','教士长袍腰带Surcingle Belt']},
+  {name:'吊裤带',tags:['Y形吊裤带Y-back Suspenders','X形吊裤带X-back Suspenders']}
+]},
+{id:'glove',name:'手套',subs:[
+  {name:'长度分类',tags:['短手套Short Gloves','手腕长度手套Wrist Length','过肘长手套Long Arm Gloves','歌剧手套Opera Gloves']},
+  {name:'款式/结构',tags:['驾驶手套Driving Gloves','无指手套Fingerless Gloves','无指长手套Fingerless Long Gloves','闷子手套Mittens','无指针织手套Fingerless Mittens','半式手套Half Gloves','护手铠甲手套Gauntlets','弓箭手套Archer\'s Gloves']},
+  {name:'材质/功能',tags:['皮革手套Leather','针织手套Knit','蕾丝手套Lace','防滑手套Slip-on','健行手套Walking','冰屋极地手套Igloo','暖手筒Muff','隔热手套Oven Gloves']}
+]},
+{id:'eyewear_glove',name:'眼镜·面具·扇子',subs:[
+  {name:'眼镜框型',tags:['圆形Round','波士顿式Boston','惠灵顿式Wellington','列克星敦式Lexington','椭圆形Oval','平顶式Flat Top','方形Square','半眼式Half Eye','妖媚狐狸款Foxy','飞行员款Aviator','眼泪形Teardrop','八角形Octagon','五角形Pentagon','心形Heart','猫眼形Cat Eye','护罩式Shield','镂空式Caged','百叶窗式Shutter Shade']},
+  {name:'眼镜特殊类型',tags:['无框式Rimless','顶部无框式Top Rimless','半框Half Rim','夹鼻式Pince-nez','长柄眼镜Lorgnette','单片眼镜Monocle','可折式眼镜Foldable','茶色镜Teashades','夹式墨镜Clip-on','包覆型Wrap Around','护目镜Goggles','双焦眼镜Bifocal','角框眼镜Horn-rimmed']},
+  {name:'面具',tags:['多米诺半面具Domino Mask','威尼斯全脸面具Volto','科隆比纳半脸面具Colombina','般若能剧面具Hannya','鸟嘴瘟疫医生面具Medico']},
+  {name:'扇子',tags:['折扇Pleated Fan','团扇Uchiwa Fan','绢扇Chinese Fixed Fan','羽毛扇Feather Fan','外销扇Brise Fan','帽章扇Cockade Fan','三折扇Trifold Fan','拇指扇Thumbhold Fan']},
+  {name:'手表/怀表',tags:['皮表带Leather Strap','不锈钢表链Steel Link Bracelet','米兰钢丝网带Milanese Strap','北约编织尼龙带Nato Strap','编织表带Woven Strap','链状表带Chain Watch Strap','运动硅胶带Sport Band','怀表Pocket Watch','计时码表Chronograph','潜水表Dive Watch']}
+]},
+{id:'formal_accessory',name:'正装配饰',subs:[
+  {name:'领部正装配件',tags:['衣领扣链Collar Chain','领角金属包边Collar Tips','领针/领杆Collar Pins','领带夹Tie Pin/Tie Bar']},
+  {name:'胸襟/袖口配件',tags:['西装胸针/襟针Lapel Pin','胸针Brooch','袖扣Cufflinks','军团徽章Regimental Badge','帽针Hat Pin']},
+  {name:'身体装饰',tags:['脚链Anklet','脚趾踝连体链Toe-ankle Chain','臂镯Armlet','闪石贴Stick-on Body Jewelry','纹身项圈Body Wire']}
+]},
+{id:'fabric',name:'面料',subs:[
+  {name:'天然纤维·棉',tags:['纯棉平纹','牛仔布Denim','府绸Broadcloth','泡泡纱Seersucker','灯芯绒Corduroy','法兰绒Flannel','帆布Canvas']},
+  {name:'天然纤维·丝麻毛',tags:['真丝电力纺','真丝双绉','真丝乔其纱','真丝欧根纱Organza','真丝塔夫绸Taffeta','香云纱莨绸','亚麻Linen','精纺羊毛','粗纺羊毛Tweed','羊绒Cashmere','马海毛Mohair','羊驼毛Alpaca']},
+  {name:'化学纤维',tags:['涤纶Polyester','锦纶Nylon','氨纶Spandex','粘胶Viscose','莫代尔Modal','天丝Tencel','摇粒绒Polar Fleece','仿皮草Faux Fur']},
+  {name:'特殊工艺面料',tags:['雪纺Chiffon','薄纱Tulle','网眼布Mesh','天鹅绒Velvet','双面呢','大提花Jacquard','蕾丝Lace','绗缝Quilted','镭射反光','闪片Sequin','PU人造革','真皮牛羊皮','麂皮Suede','漆皮Patent']}
+]},
+{id:'texture',name:'纹样与肌理',subs:[
+  {name:'几何纹样',tags:['苏格兰格纹Tartan','千鸟格Houndstooth','人字纹Herringbone','棋盘格Windowpane','条纹Stripes','波点Polka Dot','豹纹Leopard','斑马纹','蛇纹']},
+  {name:'花卉/自然纹',tags:['碎花Floral','大花印花','玫瑰印花','迷彩Camouflage','佩斯利纹Paisley','晕染渐变Ombré']},
+  {name:'传统工艺纹',tags:['蜡染扎染','云锦纹样','蓝印花布','水墨晕染','缂丝纹','提花织纹','刺绣花纹','镂空纹样']},
+  {name:'面料肌理',tags:['平滑缎面','粗粝毛呢','起毛绒面','压纹皮革','鳄鱼纹压花','磨砂哑光','镜面光泽','透明薄纱叠层','闪片肌理']}
+]},
+{id:'detail',name:'装饰工艺',subs:[
+  {name:'刺绣工艺',tags:['平绣','贴布绣Appliqué','珠绣','亮片绣','金银线刺绣','十字绣','暗纹绣同色','苗绣','粤绣广绣','苏绣','立体浮雕绣']},
+  {name:'蕾丝/镂空',tags:['棒槌蕾丝Bobbin Lace','针织蕾丝','阿伦松蕾丝Alençon','化学蕾丝水溶','激光裁切镂空']},
+  {name:'褶皱/造型',tags:['刀褶','活褶','抽褶Gathering','泡泡褶Smocking','层叠荷叶褶','垂坠褶Draping','手风琴褶','立体花朵褶']},
+  {name:'拼接/镶嵌',tags:['皮革拼接','异色拼接','异质感拼接','贴花Patch','金属铆钉Rivet','烫钻','串珠镶嵌','亮片拼贴','植绒印花']}
+]},
+{id:'color',name:'色彩词汇',subs:[
+  {name:'白色系',tags:['象牙白','乳白','珍珠白','奶白','雪白','月白','霜白','米白','银白']},
+  {name:'黑灰色系',tags:['纯黑','炭黑','墨黑','哑光黑','光泽漆黑','烟灰','铅灰','钢灰','银灰','浅灰','深灰','暖灰','冷灰']},
+  {name:'红色系',tags:['正红','朱红','玫瑰红','酒红','枣红','砖红','橙红','樱桃红','深红Crimson','粉红','藕粉','锈红']},
+  {name:'蓝绿色系',tags:['天蓝','宝蓝','深海蓝','靛蓝','钴蓝','冰蓝','雾霾蓝','灰蓝','海军蓝','孔雀蓝','薄荷绿','祖母绿','橄榄绿','军绿','墨绿','苔藓绿']},
+  {name:'黄褐中性色',tags:['米色','驼色','卡其色','奶茶色','焦糖色','姜黄','芥末黄','金黄','香槟金','铜金','古铜色','棕色','深棕','巧克力色','砂石色','赤陶色Terra Cotta']},
+  {name:'紫色系',tags:['丁香紫','薰衣草紫','深紫','茄紫','烟紫','灰紫','酒紫','玫瑰紫','蓝紫']}
+]}
+];
+
+// ══════════════════════════════════════════
+// 提示词方案系统
+// ══════════════════════════════════════════
+const DEFAULT_PROMPT_KEY = '__default__';
+const STORAGE_KEY_SCHEMES = 'wardrobe_prompt_schemes';
+const STORAGE_KEY_ACTIVE = 'wardrobe_active_scheme';
+
+// 生成百科分类索引（精简版，供提示词引用）
+function buildEncIndex() {
+  return ENC_DATA.map(cat =>
+    `【${cat.name}】${cat.subs.map(s => s.name).join('、')}`
+  ).join('\n');
+}
+
+// 默认提示词模板
+function getDefaultPromptTemplate() {
+  return `你是中文小说创作助手，专职角色服装设计。
+
+# 可用词汇库（外置百科索引）
+以下是服装百科的分类目录。你应将其视为可调用的外置数据库，按需从对应分类中提取专业词汇，而非死记词汇。
+
+{ENC_INDEX}
+
+# 角色人设
+{CHARACTER}
+
+# 任务规则
+- 已填写的字段为硬约束，原样保留
+- 空白字段：结合人设、场合、风格按需补全，不必每项都填
+- 词汇须与百科索引一致，确保专业性
+- 仅输出 JSON，无任何前缀或 Markdown
+
+# 输出格式
+输出严格遵循以下 JSON 结构：
+
+{
+  "garments": [
+    {
+      "layer": "层级（如：内搭/外套/下装）",
+      "type": "服装具体类型",
+      "color": "颜色描述",
+      "fabric": "面料",
+      "silhouette": "廓形",
+      "craft": "工艺/装饰（选填）",
+      "notes": "其他结构细节（选填）"
+    }
+  ],
+  "accessories": {
+    "帽子": "",
+    "鞋履": "",
+    "袜子腿部": "",
+    "腰带腰封": "",
+    "包袋": "",
+    "首饰珠宝": "",
+    "其他": ""
+  },
+  "prose": "约200字自然语言描写。要求：①优先呈现最具视觉冲击力或最能体现人物气质的细节；②融入场景氛围，不逐条罗列；③可用比喻通感；④以画面收束，不加主观评论；⑤不出现「这套穿搭」「整体造型」等套语；⑥只描写着装，不描写角色外貌或周边环境。",
+  "source_keys": ["列出用户提供的关键词或已填字段，用于区分来源"]
+}`;
+}
+
+// 加载所有方案
+function loadSchemes() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_SCHEMES);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+// 保存所有方案
+function saveSchemes(schemes) {
+  try { localStorage.setItem(STORAGE_KEY_SCHEMES, JSON.stringify(schemes)); } catch {}
+}
+
+// 当前激活方案名
+function getActiveScheme() {
+  return localStorage.getItem(STORAGE_KEY_ACTIVE) || DEFAULT_PROMPT_KEY;
+}
+function setActiveScheme(name) {
+  localStorage.setItem(STORAGE_KEY_ACTIVE, name);
+}
+
+// 获取激活方案的提示词文本
+function getActivePromptTemplate() {
+  const schemes = loadSchemes();
+  const active = getActiveScheme();
+  return schemes[active] || getDefaultPromptTemplate();
+}
+
+// 渲染方案栏
+function renderSchemeBar() {
+  const schemes = loadSchemes();
+  const active = getActiveScheme();
+  const bar = document.getElementById('scheme-bar');
+  if (!bar) return;
+
+  let html = `<div class="scheme-chip ${active === DEFAULT_PROMPT_KEY ? 'active' : ''}" onclick="activateScheme('${DEFAULT_PROMPT_KEY}')">默认方案</div>`;
+  for (const name of Object.keys(schemes)) {
+    const escapedName = name.replace(/'/g, "\\'");
+    html += `<div class="scheme-chip ${active === name ? 'active' : ''}" onclick="activateScheme('${escapedName}')">
+      ${name}
+      <span class="del" onclick="event.stopPropagation();deleteScheme('${escapedName}')">✕</span>
+    </div>`;
+  }
+  bar.innerHTML = html;
+}
+
+function activateScheme(name) {
+  setActiveScheme(name);
+  renderSchemeBar();
+  const schemes = loadSchemes();
+  const tpl = name === DEFAULT_PROMPT_KEY ? getDefaultPromptTemplate() : (schemes[name] || getDefaultPromptTemplate());
+  document.getElementById('prompt-editor').value = tpl;
+}
+
+function addScheme() {
+  const name = document.getElementById('new-scheme-name').value.trim();
+  if (!name || name === DEFAULT_PROMPT_KEY) { alert('请输入有效方案名'); return; }
+  const schemes = loadSchemes();
+  if (!schemes[name]) {
+    schemes[name] = getActivePromptTemplate(); // 复制当前方案
+    saveSchemes(schemes);
+  }
+  document.getElementById('new-scheme-name').value = '';
+  activateScheme(name);
+  renderSchemeBar();
+}
+
+function deleteScheme(name) {
+  if (!confirm(`确认删除方案「${name}」？`)) return;
+  const schemes = loadSchemes();
+  delete schemes[name];
+  saveSchemes(schemes);
+  setActiveScheme(DEFAULT_PROMPT_KEY);
+  activateScheme(DEFAULT_PROMPT_KEY);
+  renderSchemeBar();
+}
+
+function saveCurrentScheme() {
+  const active = getActiveScheme();
+  const content = document.getElementById('prompt-editor').value;
+  if (active === DEFAULT_PROMPT_KEY) {
+    // 默认方案无法保存覆盖，提示创建新方案
+    alert('默认方案不可覆盖。请创建一个新方案后再保存。');
+    return;
+  }
+  const schemes = loadSchemes();
+  schemes[active] = content;
+  saveSchemes(schemes);
+  showPromptNotice('✓ 方案已保存');
+}
+
+function resetToDefault() {
+  if (!confirm('重置为默认提示词模板？')) return;
+  document.getElementById('prompt-editor').value = getDefaultPromptTemplate();
+  showPromptNotice('已重置为默认模板');
+}
+
+function onPromptEdit() {
+  // 实时预览在右侧面板
+  updatePromptPreview();
+}
+
+function showPromptNotice(msg) {
+  const n = document.getElementById('prompt-notice');
+  n.textContent = msg;
+  n.style.display = 'block';
+  setTimeout(() => { n.style.display = 'none'; }, 2000);
+}
+
+function copyEditorPrompt() {
+  const text = document.getElementById('prompt-editor').value;
+  navigator.clipboard.writeText(text).then(() => showPromptNotice('✓ 已复制'));
+}
+
+function copyCurrentPrompt() {
+  const text = document.getElementById('prompt-view-content').textContent;
+  navigator.clipboard.writeText(text).then(() => alert('提示词已复制'));
+}
+
+// 将变量替换为真实内容，生成最终提示词
+function buildFinalPrompt(charProfile) {
+  const template = getActivePromptTemplate();
+  const encIndex = buildEncIndex();
+  return template
+    .replace('{ENC_INDEX}', encIndex)
+    .replace('{CHARACTER}', charProfile || '（未填写）')
+    .replace('{KEYWORDS}', '') // keywords 放 user message
+    .replace('{FILLED_FIELDS}', ''); // filled fields 放 user message
+}
+
+function updatePromptPreview() {
+  const charProfile = document.getElementById('char-profile')?.value?.trim() || '';
+  const preview = document.getElementById('prompt-view-content');
+  if (preview) preview.textContent = buildFinalPrompt(charProfile);
+}
+
+// ══════════════════════════════════════════
+// API 配置
+// ══════════════════════════════════════════
+const API_CONFIGS = {
+  anthropic: { chatPath: '/messages', defaultModel: 'claude-sonnet-4-20250514', isAnthropic: true },
+  openai:    { baseUrl: 'https://api.openai.com', chatPath: '/v1/chat/completions', defaultModel: 'gpt-4o' },
+  gemini:    { baseUrl: 'https://generativelanguage.googleapis.com', chatPath: '/v1beta/openai/chat/completions', defaultModel: 'gemini-2.5-pro', noModels: true },
+  deepseek:  { baseUrl: 'https://api.deepseek.com', chatPath: '/v1/chat/completions', defaultModel: 'deepseek-chat' },
+  custom:    { chatPath: '/chat/completions', defaultModel: '' }
+};
+let activeModel = '';
+const CORS_PROXY = 'https://corsproxy.io/?url=';
+
+function sanitizeHeader(val) { return val.trim().replace(/[^\x00-\xFF]/g, ''); }
+function proxyUrl(url) { return document.getElementById('cors-proxy-toggle').checked ? CORS_PROXY + encodeURIComponent(url) : url; }
+async function safeJson(res) { try { return await res.json(); } catch { return null; } }
+
+function buildModelsUrl(baseUrl) {
+  const url = baseUrl.replace(/\/+$/, '');
+  return /\/v\d+(\.\d+)?$/.test(url) ? url + '/models' : url + '/v1/models';
+}
+function getBaseOrigin(provider, customUrl) {
+  if (provider === 'anthropic') return 'https://api.anthropic.com/v1';
+  if (provider === 'custom') return customUrl.replace(/\/+$/, '');
+  return API_CONFIGS[provider].baseUrl;
+}
+
+function onProviderChange() { resetConnection(); const p = document.getElementById('api-provider').value; document.getElementById('custom-url-row').style.display = p === 'custom' ? 'block' : 'none'; }
+function onCorsProxyToggle() { document.getElementById('cors-proxy-warning').style.display = document.getElementById('cors-proxy-toggle').checked ? 'block' : 'none'; resetConnection(); }
+
+function resetConnection() {
+  setStatus('dot', '请填写 API Key 后连接');
+  document.getElementById('api-model-row').classList.remove('visible');
+  document.getElementById('api-save-row').style.display = 'none';
+  document.getElementById('api-save-notice').style.display = 'none';
+  document.getElementById('connect-btn').disabled = false;
+  const sel = document.getElementById('api-model-select');
+  sel.style.display = '';
+  sel.innerHTML = '<option value="">— 请先连接 —</option>';
+  document.getElementById('api-model-custom').style.display = 'none';
+  document.getElementById('api-model-custom').value = '';
+  activeModel = '';
+}
+
+function setStatus(state, msg) {
+  const dot = document.getElementById('api-dot');
+  dot.className = 'status-dot' + (state === 'ok' ? ' ok' : state === 'err' ? ' err' : state === 'connecting' ? ' connecting' : '');
+  document.getElementById('api-status-text').textContent = msg;
+}
+
+async function connectAndFetchModels() {
+  const provider = document.getElementById('api-provider').value;
+  const rawKey = document.getElementById('api-key').value.trim();
+  const customUrl = document.getElementById('api-baseurl').value.trim();
+  if (!rawKey) { setStatus('err', '请先填写 API Key'); return; }
+  if (provider === 'custom' && !customUrl) { setStatus('err', '请填写 Base URL'); return; }
+  const key = sanitizeHeader(rawKey);
+  if (!key) { setStatus('err', 'API Key 包含无效字符'); return; }
+  if (key !== rawKey) { setStatus('err', 'API Key 中含有非法字符，已自动清理'); document.getElementById('api-key').value = key; document.getElementById('connect-btn').disabled = false; return; }
+  const btn = document.getElementById('connect-btn');
+  btn.disabled = true; setStatus('connecting', '连接中…');
+  try {
+    let models = [];
+    const cfg = API_CONFIGS[provider];
+    if (provider === 'anthropic') {
+      const res = await fetch(proxyUrl('https://api.anthropic.com/v1/models'), { headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' } });
+      if (!res.ok) { const err = await safeJson(res); throw new Error(err?.error?.message || `HTTP ${res.status}`); }
+      const data = await res.json();
+      models = (data.data || []).map(m => m.id).filter(Boolean);
+    } else if (provider === 'gemini') {
+      models = [];
+    } else {
+      const origin = getBaseOrigin(provider, customUrl);
+      const res = await fetch(proxyUrl(buildModelsUrl(origin)), { headers: { 'Authorization': `Bearer ${key}` } });
+      if (!res.ok) { const err = await safeJson(res); throw new Error(err?.error?.message || `HTTP ${res.status}`); }
+      const data = await safeJson(res);
+      if (!data) throw new Error('服务器返回了非 JSON 响应');
+      models = (data.data || []).map(m => m.id).filter(Boolean).sort();
+      if (models.length === 0) throw new Error('已连接但未获取到模型列表');
+    }
+    const sel = document.getElementById('api-model-select');
+    const customInp = document.getElementById('api-model-custom');
+    sel.innerHTML = '';
+    if (models.length > 0) {
+      models.forEach(id => { const opt = document.createElement('option'); opt.value = id; opt.textContent = id; sel.appendChild(opt); });
+      const manOpt = document.createElement('option'); manOpt.value = '__custom__'; manOpt.textContent = '— 手动输入模型名 —'; sel.appendChild(manOpt);
+      const saved = loadApiSettings(); const preferred = saved?.model || cfg.defaultModel;
+      if (preferred && models.includes(preferred)) sel.value = preferred; else sel.value = models[0];
+      sel.style.display = ''; customInp.style.display = 'none'; activeModel = sel.value;
+      setStatus('ok', `已连接 · ${models.length} 个模型`);
+    } else {
+      sel.style.display = 'none'; customInp.style.display = 'block';
+      const saved = loadApiSettings(); customInp.value = saved?.model || cfg.defaultModel || '';
+      activeModel = customInp.value; setStatus('ok', '已连接 · 请手动填写模型名');
+    }
+    document.getElementById('api-model-row').classList.add('visible');
+    document.getElementById('api-save-row').style.display = 'flex';
+  } catch (e) { setStatus('err', '连接失败：' + e.message); btn.disabled = false; }
+}
+
+function onModelSelect() {
+  const sel = document.getElementById('api-model-select');
+  const customInp = document.getElementById('api-model-custom');
+  if (sel.value === '__custom__') { customInp.style.display = 'block'; customInp.focus(); activeModel = customInp.value.trim(); }
+  else { customInp.style.display = 'none'; activeModel = sel.value; }
+}
+function onModelCustomInput() { activeModel = document.getElementById('api-model-custom').value.trim(); }
+
+function saveApiSettings() {
+  const settings = { provider: document.getElementById('api-provider').value, key: document.getElementById('api-key').value.trim(), model: activeModel, customUrl: document.getElementById('api-baseurl').value.trim(), useCorsProxy: document.getElementById('cors-proxy-toggle').checked };
+  try { localStorage.setItem('costDesigner_api', JSON.stringify(settings)); } catch {}
+  const notice = document.getElementById('api-save-notice'); notice.style.display = 'block'; setTimeout(() => { notice.style.display = 'none'; }, 2000);
+}
+function clearApiSettings() { try { localStorage.removeItem('costDesigner_api'); } catch {} document.getElementById('api-key').value = ''; document.getElementById('api-baseurl').value = ''; resetConnection(); setStatus('dot', '设置已清除'); }
+function loadApiSettings() { try { const raw = localStorage.getItem('costDesigner_api'); return raw ? JSON.parse(raw) : null; } catch { return null; } }
+function restoreApiSettings() {
+  const s = loadApiSettings(); if (!s) return;
+  document.getElementById('api-provider').value = s.provider || 'anthropic'; onProviderChange();
+  if (s.key) document.getElementById('api-key').value = s.key;
+  if (s.customUrl) document.getElementById('api-baseurl').value = s.customUrl;
+  if (s.useCorsProxy) { document.getElementById('cors-proxy-toggle').checked = true; document.getElementById('cors-proxy-warning').style.display = 'block'; }
+  if (s.key) connectAndFetchModels().then(() => { if (s.model) { const sel = document.getElementById('api-model-select'); const customInp = document.getElementById('api-model-custom'); if (Array.from(sel.options).some(o => o.value === s.model)) { sel.value = s.model; } else { sel.value = '__custom__'; customInp.style.display = 'block'; customInp.value = s.model; } activeModel = s.model; } });
+}
+
+async function callAPI(systemPrompt, userMsg) {
+  const provider = document.getElementById('api-provider').value;
+  const rawKey = document.getElementById('api-key').value.trim();
+  const customUrl = document.getElementById('api-baseurl').value.trim();
+  const model = activeModel || document.getElementById('api-model-custom')?.value?.trim() || API_CONFIGS[provider].defaultModel;
+  if (!rawKey) throw new Error('请先填写 API Key 并连接');
+  if (!model) throw new Error('请先选择模型');
+  const key = sanitizeHeader(rawKey);
+  if (!key) throw new Error('API Key 包含无效字符');
+  const cfg = API_CONFIGS[provider];
+  let chatUrl;
+  if (provider === 'anthropic') chatUrl = 'https://api.anthropic.com/v1/messages';
+  else if (provider === 'custom') { const base = customUrl.replace(/\/+$/, ''); chatUrl = /\/chat\/completions$/.test(base) ? base : base + '/chat/completions'; }
+  else chatUrl = cfg.baseUrl.replace(/\/+$/, '') + cfg.chatPath;
+  let res;
+  try {
+    if (provider === 'anthropic') {
+      res = await fetch(proxyUrl(chatUrl), { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify({ model, max_tokens: 2000, stream: false, system: systemPrompt, messages: [{ role: 'user', content: userMsg }] }) });
+    } else {
+      res = await fetch(proxyUrl(chatUrl), { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }, body: JSON.stringify({ model, max_tokens: 2000, stream: false, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }] }) });
+    }
+  } catch (networkErr) { throw new Error(`网络请求失败：${networkErr.message}${!document.getElementById('cors-proxy-toggle').checked ? '\n提示：可尝试勾选"启用 CORS 代理"' : ''}`); }
+  const rawText = await res.text();
+  if (!res.ok) { let errMsg = `HTTP ${res.status}`; try { const errData = JSON.parse(rawText); errMsg = errData?.error?.message || errData?.message || errMsg; } catch {} throw new Error(errMsg); }
+  let data;
+  try { data = JSON.parse(rawText); } catch {
+    if (rawText.startsWith('data:')) { try { const firstLine = rawText.split('\n').find(l => l.startsWith('data:') && !l.includes('[DONE]')); const chunk = JSON.parse(firstLine.replace(/^data:\s*/, '')); const content = chunk?.choices?.[0]?.delta?.content || ''; if (content) return content + '（流式响应，内容可能不完整）'; } catch {} }
+    throw new Error(`API 返回了非 JSON 响应（${rawText.slice(0,100)}…）`);
+  }
+  if (data.error) throw new Error(data.error.message);
+  if (provider === 'anthropic') return data.content?.map(b => b.text || '').join('') || '';
+  return data.choices?.[0]?.message?.content || '';
+}
+
+// ══════════════════════════════════════════
+// 表单收集
+// ══════════════════════════════════════════
+const FIELD_MAP = {
+  bedskin: [
+    ['睡衣类型','nightwear_type'],['睡衣颜色','nightwear_color'],['睡衣材质','nightwear_fabric'],
+    ['胸罩类型','bra_type'],['女性内裤','brief_type'],['男性内裤','mens_brief_type'],['内衣颜色','underwear_color'],['内衣材质','underwear_fabric'],
+    ['紧身衣类型','corset_type'],['紧身衣颜色','corset_color'],['紧身衣材质','corset_fabric']
+  ],
+  base: [
+    ['服装大类','f_category'],['整体风格','f_style'],['适用场合','f_occasion'],
+    ['季节时段','f_season'],['主色调','f_color_main'],['辅色撞色','f_color_sub'],
+    ['主体面料','f_fabric'],['整体廓形','f_silhouette']
+  ],
+  inner: [
+    ['内搭上衣','inner_top'],['女装衬衫上衣','inner_blouse'],['内搭颜色','inner_color'],['领型','inner_collar'],
+    ['袖型','inner_sleeve'],['内搭面料','inner_fabric'],['内搭工艺','inner_craft']
+  ],
+  middle: [
+    ['背心马甲','middle_vest'],['毛衣类型','middle_sweater'],['开衫类型','middle_cardigan'],['夹层颜色','middle_color'],['门襟口袋','middle_placket'],['腰线下摆','middle_waist']
+  ],
+  outer: [
+    ['夹克类型','outer_jacket'],['大衣类型','outer_coat'],['外套颜色','outer_color'],
+    ['外套领型','outer_collar'],['外套袖型','outer_sleeve'],['外套面料','outer_fabric']
+  ],
+  suit: [
+    ['套装类型','suit_type'],['男士套装款式','suit_mens'],['女士套装款式','suit_womens'],
+    ['制作模式','suit_mode'],['套装件数','suit_pieces'],['套装扣型','suit_button'],
+    ['套装颜色','suit_color'],['套装面料','suit_fabric'],['套装领型','suit_collar'],['套装工艺','suit_craft']
+  ],
+  dress: [
+    ['连衣裙款式','dress_type'],['廓形特征','dress_silhouette'],['裙长','dress_length'],['腰线类型','dress_waist'],['连衣裙颜色','dress_color'],['裙领型','dress_collar'],
+    ['裙袖型','dress_sleeve'],['连衣裙面料','dress_fabric'],['连衣裙工艺','dress_craft']
+  ],
+  bottom: [
+    ['裤装类型','pants_type'],['牛仔款式','pants_denim'],['裤装廓形裤长','pants_shape'],['裤装颜色','pants_color'],['裤装面料','pants_fabric'],
+    ['裙装类型','skirt_type'],['裙长','skirt_shape'],['裙装颜色','skirt_color'],['裙装面料','skirt_fabric'],
+    ['连衣裤类型','jumpsuit_type'],['连衣裤颜色','jumpsuit_color'],['连衣裤面料','jumpsuit_fabric']
+  ],
+  acc: [
+    ['帽子','a_hat'],['鞋履','a_shoes'],['袜子腿部','a_socks'],['手套','a_gloves'],
+    ['围巾颈部','a_scarf'],['腰带腰封','a_belt'],['包袋','a_bag'],['首饰珠宝','a_jewelry'],
+    ['眼镜扇子','a_eyewear'],['其他配饰','a_other']
+  ],
+  context: [
+    ['性别气质','p_gender'],['世界观时代','p_world'],['此刻场景','p_scene'],['描写基调','p_tone']
+  ]
+};
+
+function collectForm() {
+  const result = {}; const filled = [];
+  for (const [group, fields] of Object.entries(FIELD_MAP)) {
+    result[group] = {};
+    for (const [label, id] of fields) {
+      const v = document.getElementById(id)?.value?.trim() || '';
+      result[group][label] = v;
+      if (v) filled.push(`${label}：${v}`);
+    }
+  }
+  return { data: result, filled };
+}
+
+function buildUserMessage(formData, keywords) {
+  let msg = '';
+  if (keywords) msg += `【用户关键词】${keywords}\n\n`;
+  const filledLines = [];
+  for (const [group, fields] of Object.entries(FIELD_MAP)) {
+    for (const [label] of fields) {
+      const v = formData[group]?.[label];
+      if (v) filledLines.push(`${label}：${v}`);
+    }
+  }
+  if (filledLines.length) msg += `【已填写字段（硬约束）】\n${filledLines.join('\n')}\n`;
+  if (!msg.trim()) msg = '请根据角色人设和百科词汇自由设计一套完整服装。';
+  return msg;
+}
+
+// ══════════════════════════════════════════
+// 渲染结果表格（按服装类型）
+// ══════════════════════════════════════════
+function renderResultTable(data) {
+  const { garments, accessories, source_keys } = data;
+  const sk = source_keys || [];
+  let html = '';
+
+  if (garments && garments.length) {
+    for (const g of garments) {
+      const label = [g.layer, g.type].filter(Boolean).join(' · ') || '服装';
+      html += `<div class="garment-block">
+        <div class="garment-label">🧥 ${label}</div>
+        <table class="rt">`;
+      const rows = [
+        ['颜色', g.color],
+        ['面料', g.fabric],
+        ['廓形', g.silhouette],
+        ['工艺 / 装饰', g.craft],
+        ['结构细节', g.notes]
+      ];
+      for (const [k, v] of rows) {
+        if (!v) continue;
+        const isUser = sk.some(s => v && s.includes(v.slice(0,4)));
+        html += `<tr><td>${k}</td><td class="${isUser ? 'kw-val' : 'ai-val'}">${v}</td></tr>`;
+      }
+      html += `</table></div>`;
+    }
+  }
+
+  if (accessories) {
+    const accEntries = Object.entries(accessories).filter(([,v]) => v);
+    if (accEntries.length) {
+      html += `<div class="garment-block">
+        <div class="garment-label">✦ 配饰</div>
+        <table class="acc-table">`;
+      for (const [k, v] of accEntries) {
+        html += `<tr><td>${k}</td><td class="ai-val">${v}</td></tr>`;
+      }
+      html += `</table></div>`;
+    }
+  }
+
+  html += `<div style="margin-top:6px;font-size:10px;color:var(--text3);display:flex;gap:10px">
+    <span><span style="color:var(--accent)">■</span> 用户提供</span>
+    <span><span style="color:var(--text2)">■</span> AI 补全</span>
+  </div>`;
+  return html;
+}
+
+// ══════════════════════════════════════════
+// 主生成逻辑
+// ══════════════════════════════════════════
+async function generate() {
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true; btn.textContent = '生成中…';
+  const charProfile = document.getElementById('char-profile').value.trim();
+  const keywords = document.getElementById('kw-input').value.trim();
+  const { data: formData } = collectForm();
+  const systemPrompt = buildFinalPrompt(charProfile);
+  const userMsg = buildUserMessage(formData, keywords);
+  document.getElementById('result-table').innerHTML = '<div style="color:var(--text3);font-size:12px"><span class="loading-spin"></span>AI 正在设计服装…</div>';
+  document.getElementById('result-prose').className = 'prose-box empty';
+  document.getElementById('result-prose').textContent = 'AI 正在撰写描写…';
+  document.getElementById('copy-prose-btn').style.display = 'none';
+  document.getElementById('export-txt-btn').style.display = 'none';
+  switchRTab('result');
+  try {
+    const raw = await callAPI(systemPrompt, userMsg);
+    let parsed;
+    try { const clean = raw.replace(/```json|```/g, '').trim(); parsed = JSON.parse(clean); }
+    catch { document.getElementById('result-table').innerHTML = `<div style="font-size:12px;color:var(--text3);white-space:pre-wrap">${raw}</div>`; document.getElementById('result-prose').className = 'prose-box empty'; document.getElementById('result-prose').textContent = '（AI 未返回标准格式）'; return; }
+    document.getElementById('result-table').innerHTML = renderResultTable(parsed);
+    document.getElementById('result-prose').className = 'prose-box';
+    document.getElementById('result-prose').textContent = parsed.prose || '（未生成描写）';
+    document.getElementById('copy-prose-btn').style.display = 'inline-block';
+    document.getElementById('export-txt-btn').style.display = 'inline-flex';
+    _lastParsedResult = parsed;
+  } catch (e) {
+    document.getElementById('result-table').innerHTML = `<div style="color:var(--red);font-size:12px">错误：${e.message}</div>`;
+    document.getElementById('result-prose').textContent = '';
+  } finally { btn.disabled = false; btn.textContent = '生 成'; }
+}
+
+function copyProse() {
+  const text = document.getElementById('result-prose').textContent;
+  navigator.clipboard.writeText(text).then(() => { const btn = document.getElementById('copy-prose-btn'); btn.textContent = '已复制！'; setTimeout(() => { btn.textContent = '复制描写'; }, 1500); });
+}
+
+// ══════════════════════════════════════════
+// 导出 TXT
+// ══════════════════════════════════════════
+let _lastParsedResult = null;
+
+function exportTxt() {
+  if (!_lastParsedResult) { alert('尚无生成结果，请先点击「生成」。'); return; }
+  const { garments, accessories, prose } = _lastParsedResult;
+  const charProfile = document.getElementById('char-profile').value.trim();
+  const keywords = document.getElementById('kw-input').value.trim();
+  const now = new Date();
+  const ts = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+  const sep = '════════════════════════════════';
+  const thin = '────────────────────────────────';
+  let lines = [];
+
+  lines.push('衣橱志 · 服装设计导出');
+  lines.push(`生成时间：${ts}`);
+  if (charProfile) lines.push(`角色人设：${charProfile}`);
+  if (keywords)    lines.push(`关键词：${keywords}`);
+  lines.push('');
+  lines.push(sep);
+  lines.push('【服装设计表】');
+  lines.push(sep);
+
+  if (garments && garments.length) {
+    garments.forEach((g, i) => {
+      const label = [g.layer, g.type].filter(Boolean).join(' · ') || '服装';
+      if (i > 0) lines.push('');
+      lines.push(`▌ ${label}`);
+      lines.push(thin);
+      if (g.color)     lines.push(`  颜色        ${g.color}`);
+      if (g.fabric)    lines.push(`  面料        ${g.fabric}`);
+      if (g.silhouette)lines.push(`  廓形        ${g.silhouette}`);
+      if (g.craft)     lines.push(`  工艺/装饰   ${g.craft}`);
+      if (g.notes)     lines.push(`  结构细节    ${g.notes}`);
+    });
+  } else {
+    lines.push('  （无服装数据）');
+  }
+
+  if (accessories) {
+    const accEntries = Object.entries(accessories).filter(([,v]) => v);
+    if (accEntries.length) {
+      lines.push('');
+      lines.push('▌ 配饰');
+      lines.push(thin);
+      accEntries.forEach(([k, v]) => {
+        lines.push(`  ${k.padEnd(8,'　')}${v}`);
+      });
+    }
+  }
+
+  lines.push('');
+  lines.push(sep);
+  lines.push('【自然语言描写】');
+  lines.push(sep);
+  lines.push('');
+  lines.push(prose || '（未生成描写）');
+  lines.push('');
+  lines.push(sep);
+  lines.push('由「衣橱志 · 小说服装设计工具」生成');
+
+  const content = lines.join('\n');
+  const blob = new Blob(['\uFEFF' + content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fileName = `服装设计_${charProfile ? charProfile.slice(0,10) : '角色'}_${ts.replace(/[: ]/g,'-')}.txt`;
+  a.href = url; a.download = fileName; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ══════════════════════════════════════════
+// 百科功能
+// ══════════════════════════════════════════
+function renderEnc2(filter) {
+  const container = document.getElementById('enc2-content');
+  let html = '';
+  ENC_DATA.forEach(cat => {
+    let catHtml = '';
+    cat.subs.forEach(sub => {
+      const filtered = filter ? sub.tags.filter(t => t.includes(filter)) : sub.tags;
+      if (!filtered.length) return;
+      catHtml += `<div style="margin-bottom:10px">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;padding-left:7px;border-left:2px solid var(--border2)">${sub.name}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">${filtered.map(t => `<span class="enc-tag-pill" onclick="injectTag('${t.replace(/'/g,"\\'")}');switchView('designer')">${t}</span>`).join('')}</div>
+      </div>`;
+    });
+    if (!catHtml) return;
+    html += `<div style="margin-bottom:1.75rem">
+      <h3 style="font-family:var(--serif);font-size:15px;color:var(--accent);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border)">${cat.name}</h3>
+      ${catHtml}
+    </div>`;
+  });
+  container.innerHTML = html || '<div style="color:var(--text3);font-size:13px">没有找到匹配词条</div>';
+}
+
+function encSearch2(q) { renderEnc2(q); }
+
+function injectTag(tag) {
+  const input = document.getElementById('kw-input');
+  const cur = input.value.trim();
+  input.value = cur ? cur + '、' + tag : tag;
+}
+
+// ══════════════════════════════════════════
+// 选择器 Modal
+// ══════════════════════════════════════════
+var currentSelector = { inputId: null, categoryId: null, title: null, stack: [] };
+
+function openEncSelector(inputId, categoryId, title) {
+  const modal = document.getElementById('selector-modal');
+  const category = ENC_DATA.find(c => c.id === categoryId);
+  if (!category) return;
+  currentSelector = { inputId, categoryId, title, stack: [] };
+  document.getElementById('selector-title').textContent = title + ' · 分类';
+  document.getElementById('selector-back').style.display = 'none';
+  const body = document.getElementById('selector-body');
+  if (!body) return;
+  // 若只有一个子类，直接展开标签，跳过分类卡片层
+  if (category.subs.length === 1) {
+    const sub = category.subs[0];
+    document.getElementById('selector-title').textContent = title;
+    body.innerHTML = sub.tags.map(tag => `<div class="selector-tag" onclick="selectEncTag('${tag.replace(/'/g,"\\'")}')">  ${tag}</div>`).join('');
+    body.innerHTML += `<div class="selector-tag" style="border-style:dashed;color:var(--accent)" onclick="openCustomDialog('${inputId}')">＋ 自定义添加…</div>`;
+    body.innerHTML += `<div class="selector-tag" style="border-style:dashed;color:var(--red)" onclick="clearSelectorInput()">✕ 清空当前项</div>`;
+    modal.classList.add('open'); document.body.style.overflow = 'hidden';
+    return;
+  }
+  body.innerHTML = category.subs.map(sub => `
+    <div class="selector-card" onclick="openSelectorSub('${sub.name.replace(/'/g,"\\'")}')">
+      <h4>${sub.name}</h4>
+      <p>${sub.tags.slice(0,4).join(' · ')}</p>
+    </div>
+  `).join('');
+  body.innerHTML += `<div class="selector-tag" style="border-style:dashed;color:var(--accent)" onclick="openCustomDialog('${inputId}')">＋ 自定义添加…</div>`;
+  body.innerHTML += `<div class="selector-tag" style="border-style:dashed;color:var(--red)" onclick="clearSelectorInput()">✕ 清空当前项</div>`;
+  modal.classList.add('open'); document.body.style.overflow = 'hidden';
+}
+
+function openSelectorSub(subName) {
+  const category = ENC_DATA.find(c => c.id === currentSelector.categoryId);
+  const sub = category.subs.find(s => s.name === subName);
+  if (!sub) return;
+  currentSelector.stack.push('root');
+  document.getElementById('selector-title').textContent = sub.name;
+  document.getElementById('selector-back').style.display = 'inline-flex';
+  const body = document.getElementById('selector-body');
+  body.innerHTML = sub.tags.map(tag => `<div class="selector-tag" onclick="selectEncTag('${tag.replace(/'/g,"\\'")}')">  ${tag}</div>`).join('');
+  body.innerHTML += `<div class="selector-tag" style="border-style:dashed;color:var(--accent)" onclick="openCustomDialog('${currentSelector.inputId}')">＋ 自定义添加…</div>`;
+  body.innerHTML += `<div class="selector-tag" style="border-style:dashed;color:var(--red)" onclick="clearSelectorInput()">✕ 清空当前项</div>`;
+}
+
+function selectorGoBack() { currentSelector.stack = []; openEncSelector(currentSelector.inputId, currentSelector.categoryId, currentSelector.title); }
+
+function selectEncTag(tag) {
+  const input = document.getElementById(currentSelector.inputId);
+  if (!input) return;
+  if (input.value.trim()) { const existing = input.value.split('、').map(v => v.trim()); if (!existing.includes(tag)) input.value += '、' + tag; }
+  else input.value = tag;
+  closeSelector();
+}
+
+function clearSelectorInput() { const input = document.getElementById(currentSelector.inputId); if (input) input.value = ''; closeSelector(); }
+function closeSelector() { document.getElementById('selector-modal').classList.remove('open'); document.body.style.overflow = ''; }
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSelector(); closeCustomDialog(); } });
+document.getElementById('selector-modal')?.addEventListener('click', e => { if (e.target.id === 'selector-modal') closeSelector(); });
+
+// ══════════════════════════════════════════
+// 自定义 Dialog
+// ══════════════════════════════════════════
+let customTargetInput = null;
+function openCustomDialog(inputId) { customTargetInput = inputId; document.getElementById('custom-dialog').classList.add('open'); document.getElementById('custom-input').value = ''; }
+function closeCustomDialog() { document.getElementById('custom-dialog').classList.remove('open'); }
+function confirmCustomInput() {
+  const val = document.getElementById('custom-input').value.trim();
+  if (!val) return;
+  const input = document.getElementById(customTargetInput);
+  if (input) { if (input.value.trim()) input.value += '、' + val; else input.value = val; }
+  closeCustomDialog(); closeSelector();
+}
+
+// ══════════════════════════════════════════
+// UI 辅助
+// ══════════════════════════════════════════
+function toggleCard(head) {
+  const body = head.nextElementSibling;
+  const arrow = head.querySelector('.fch-arrow');
+  const open = body.classList.toggle('open');
+  arrow.classList.toggle('open', open);
+}
+
+function switchLayerTab(el, name) {
+  const parent = el.closest('.form-card-body');
+  parent.querySelectorAll('.layer-tab').forEach(t => t.classList.remove('active'));
+  parent.querySelectorAll('.layer-pane').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  const pane = parent.querySelector('#pane-' + name);
+  if (pane) pane.classList.add('active');
+}
+
+function switchRTab(id) {
+  document.querySelectorAll('.rp-tab').forEach((t, i) => t.classList.toggle('on', ['result','prompt_view'][i] === id));
+  document.querySelectorAll('.rp-pane').forEach(p => p.classList.remove('on'));
+  document.getElementById('rp-' + id).classList.add('on');
+  if (id === 'prompt_view') updatePromptPreview();
+}
+
+function switchView(v) {
+  document.querySelectorAll('.hn-btn').forEach((b, i) => b.classList.toggle('active', ['designer','encyclopedia','prompt'][i] === v));
+  document.getElementById('view-designer').style.display = v === 'designer' ? 'grid' : 'none';
+  document.getElementById('view-encyclopedia').style.display = v === 'encyclopedia' ? 'block' : 'none';
+  document.getElementById('view-prompt').style.display = v === 'prompt' ? 'block' : 'none';
+  if (v === 'encyclopedia') renderEnc2('');
+  if (v === 'prompt') {
+    renderSchemeBar();
+    const active = getActiveScheme();
+    const schemes = loadSchemes();
+    const tpl = active === DEFAULT_PROMPT_KEY ? getDefaultPromptTemplate() : (schemes[active] || getDefaultPromptTemplate());
+    document.getElementById('prompt-editor').value = tpl;
+  }
+}
+
+// ══════════════════════════════════════════
+// 初始化
+// ══════════════════════════════════════════
+// ══════════════════════════════════════════
+// 角色人设管理
+// ══════════════════════════════════════════
+const CHAR_STORAGE_KEY = 'wardrobe_characters';
+const CHAR_ACTIVE_KEY  = 'wardrobe_active_char';
+
+function loadChars() {
+  try { const r = localStorage.getItem(CHAR_STORAGE_KEY); return r ? JSON.parse(r) : {}; } catch { return {}; }
+}
+function saveChars(chars) {
+  try { localStorage.setItem(CHAR_STORAGE_KEY, JSON.stringify(chars)); } catch {}
+}
+function getActiveCharId() {
+  return localStorage.getItem(CHAR_ACTIVE_KEY) || null;
+}
+function setActiveCharId(id) {
+  if (id) localStorage.setItem(CHAR_ACTIVE_KEY, id);
+  else localStorage.removeItem(CHAR_ACTIVE_KEY);
+}
+function genCharId() {
+  return 'char_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+}
+
+function renderCharSwitcher() {
+  const chars = loadChars();
+  const activeId = getActiveCharId();
+  const sw = document.getElementById('char-switcher');
+  const nameEl = document.getElementById('char-active-name');
+  if (!sw) return;
+
+  const ids = Object.keys(chars);
+  if (ids.length === 0) {
+    sw.innerHTML = '';
+    nameEl.textContent = '尚未创建角色';
+    document.getElementById('char-profile').value = '';
+    document.getElementById('char-profile').placeholder = '点击右上角「＋ 新建」创建第一个角色。';
+    return;
+  }
+
+  sw.innerHTML = ids.map(id => {
+    const c = chars[id];
+    const isActive = id === activeId;
+    return `<div class="char-chip ${isActive ? 'active' : ''}" onclick="switchChar('${id}')">
+      <span class="char-chip-name">${c.name}</span>
+      ${isActive ? '<span style="font-size:9px;color:var(--accent)">▶</span>' : ''}
+    </div>`;
+  }).join('');
+
+  if (activeId && chars[activeId]) {
+    nameEl.textContent = chars[activeId].name;
+  } else {
+    nameEl.textContent = '未选择角色';
+  }
+}
+
+function switchChar(id) {
+  const chars = loadChars();
+  if (!chars[id]) return;
+  setActiveCharId(id);
+  document.getElementById('char-profile').value = chars[id].profile || '';
+  renderCharSwitcher();
+}
+
+function autoSaveActiveChar() {
+  const id = getActiveCharId();
+  if (!id) return;
+  const chars = loadChars();
+  if (!chars[id]) return;
+  chars[id].profile = document.getElementById('char-profile').value;
+  saveChars(chars);
+  const hint = document.getElementById('char-save-hint');
+  hint.style.display = 'block';
+  clearTimeout(autoSaveActiveChar._t);
+  autoSaveActiveChar._t = setTimeout(() => { hint.style.display = 'none'; }, 1500);
+}
+
+function renameActiveChar() {
+  const id = getActiveCharId();
+  if (!id) { alert('请先选择一个角色。'); return; }
+  const chars = loadChars();
+  if (!chars[id]) return;
+  const newName = prompt('修改角色名：', chars[id].name);
+  if (!newName || !newName.trim()) return;
+  chars[id].name = newName.trim().slice(0, 30);
+  saveChars(chars);
+  renderCharSwitcher();
+}
+
+function deleteActiveChar() {
+  const id = getActiveCharId();
+  if (!id) { alert('请先选择一个角色。'); return; }
+  const chars = loadChars();
+  if (!chars[id]) return;
+  if (!confirm(`确认删除角色「${chars[id].name}」？此操作不可撤销。`)) return;
+  delete chars[id];
+  saveChars(chars);
+  // 切换到第一个剩余角色
+  const remaining = Object.keys(chars);
+  if (remaining.length > 0) {
+    setActiveCharId(remaining[0]);
+    document.getElementById('char-profile').value = chars[remaining[0]].profile || '';
+  } else {
+    setActiveCharId(null);
+    document.getElementById('char-profile').value = '';
+  }
+  renderCharSwitcher();
+}
+
+// 新建角色 Dialog
+function openNewCharDialog() {
+  document.getElementById('new-char-dialog').classList.add('open');
+  document.getElementById('new-char-name-input').value = '';
+  setTimeout(() => document.getElementById('new-char-name-input').focus(), 80);
+}
+function closeNewCharDialog() {
+  document.getElementById('new-char-dialog').classList.remove('open');
+}
+function confirmNewChar() {
+  const name = document.getElementById('new-char-name-input').value.trim().slice(0, 30);
+  if (!name) { alert('请输入角色名。'); return; }
+  const chars = loadChars();
+  const id = genCharId();
+  chars[id] = { name, profile: '' };
+  saveChars(chars);
+  setActiveCharId(id);
+  document.getElementById('char-profile').value = '';
+  renderCharSwitcher();
+  closeNewCharDialog();
+  document.getElementById('char-profile').focus();
+}
+
+// 初始化时恢复激活角色
+function restoreActiveChar() {
+  const chars = loadChars();
+  const activeId = getActiveCharId();
+  if (activeId && chars[activeId]) {
+    document.getElementById('char-profile').value = chars[activeId].profile || '';
+  } else if (Object.keys(chars).length > 0) {
+    const firstId = Object.keys(chars)[0];
+    setActiveCharId(firstId);
+    document.getElementById('char-profile').value = chars[firstId].profile || '';
+  }
+  renderCharSwitcher();
+}
+
+// 新建角色 Dialog 也可按 Enter 确认
+document.getElementById('new-char-name-input')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmNewChar();
+});
+document.getElementById('new-char-dialog')?.addEventListener('click', e => {
+  if (e.target.id === 'new-char-dialog') closeNewCharDialog();
+});
+
+restoreApiSettings();
+restoreActiveChar();
+renderSchemeBar();
+</script>
+</body>
+</html>
